@@ -1,4 +1,4 @@
-package model.mongodb.clients
+package model.mongodb.clients.async
 
 import org.bson.codecs.configuration.CodecProvider
 import org.bson.codecs.configuration.CodecRegistries.{fromProviders, fromRegistries}

@@ -2,12 +2,11 @@ package services
 
 import fs2.Task
 import io.circe.generic.auto._
-import model.person.{PersonRegistry, _}
-import model.mongodb.MongoOps._
+import model.person.{AsyncPersonRegistry, _}
+import model.mongodb.clients.async.AsyncMongoOps._
 import common.Implicits._
 import Implicits._
 import cats.data.{NonEmptyList, Validated}
-import fs2.util.NonFatal
 import org.http4s._
 import org.http4s.circe._
 import org.http4s.dsl._
@@ -25,7 +24,7 @@ object PersonRs {
     case e: MatchError => BadRequest(s"The request was probably not well-formed. Msg = ${e.getMessage}")
   }
 
-  val personRs: PersonRs = new PersonRs(PersonRegistry)
+  val personRs: PersonRs = new PersonRs(ReactivePersonRegistry)
   val service: HttpService = personRs.personRsService
 }
 
@@ -42,7 +41,7 @@ class PersonRs(personServiceComponent: PersonServiceComponent) {
     case req @ POST -> Root / PERSONS =>
       val resp = for {
         personNoId <- req.as(jsonOf[PersonNoId])
-        resp <- personService.insertPerson(Person.fromPersonNoId(personNoId)).flatMap(Ok(_))
+        resp <- personService.insertPerson(Person.toPersonWithId(personNoId)).flatMap(Ok(_))
       } yield resp
       resp//.handleWith(errorHandler)
 

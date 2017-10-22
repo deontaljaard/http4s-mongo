@@ -26,7 +26,7 @@ libraryDependencies ++= Seq(
   "org.mongodb" % "bson" % mongoJavaVersion,
   "org.mongodb" % "mongodb-driver-core" % mongoJavaVersion,
   "org.mongodb" % "mongodb-driver-async" % mongoJavaVersion,
-  "org.reactivemongo" % "reactivemongo_2.12" % "0.12.5" % "provided",
+  "org.reactivemongo" % "reactivemongo_2.12" % reactiveMongoScalaVersion,
   "io.netty" % "netty-common" % nettyVersion,
   "io.netty" % "netty-transport" % nettyVersion,
   "io.netty" % "netty-buffer" % nettyVersion,

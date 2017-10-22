@@ -1,9 +1,10 @@
-package model.mongodb.clients
+package model.mongodb.clients.reactive
 
 import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.api.{DefaultDB, MongoConnection, MongoDriver}
 import reactivemongo.core.errors.ConnectionException
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 object ReactiveMongoClientFactory {

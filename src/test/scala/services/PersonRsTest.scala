@@ -34,7 +34,7 @@ class PersonRsTest extends Specification
   personService.findById(anyString) returns eventualPerson
 
   def findPersonById = {
-    import model.mongodb.MongoOps._
+    import model.mongodb.clients.async.AsyncMongoOps._
 
     val response = personRs(findPersonByIdRequest).unsafeRun
 
