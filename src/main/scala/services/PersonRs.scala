@@ -24,7 +24,7 @@ object PersonRs {
     case e: MatchError => BadRequest(s"The request was probably not well-formed. Msg = ${e.getMessage}")
   }
 
-  val personRs: PersonRs = new PersonRs(ReactivePersonRegistry)
+  val personRs: PersonRs = new PersonRs(AsyncPersonRegistry)
   val service: HttpService = personRs.personRsService
 }
 

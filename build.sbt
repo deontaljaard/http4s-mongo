@@ -1,5 +1,5 @@
 organization := "deontaljaard.github.io"
-name := "http4s-mongo"
+name := "http4s-demo"
 version := "0.0.1-SNAPSHOT"
 scalaVersion := "2.12.2"
 
@@ -11,8 +11,10 @@ lazy val reactiveMongoScalaVersion = "0.12.5"
 lazy val mongoJavaVersion = "3.4.2"
 lazy val nettyVersion = "4.1.15.Final"
 lazy val specs2Version = "4.0.0"
+lazy val jwtVersion = "1.2.2"
 
 libraryDependencies ++= Seq(
+  // Compile dependencies
   "org.http4s" %% "http4s-blaze-server" % http4sVersion,
   "org.http4s" %% "http4s-circe" % http4sVersion,
   "org.http4s" %% "http4s-dsl" % http4sVersion,
@@ -30,6 +32,8 @@ libraryDependencies ++= Seq(
   "io.netty" % "netty-common" % nettyVersion,
   "io.netty" % "netty-transport" % nettyVersion,
   "io.netty" % "netty-buffer" % nettyVersion,
+  "io.igl" %% "jwt" % jwtVersion,
+  // Test dependencies
   "org.specs2" % "specs2-core_2.12" % specs2Version % "test",
   "org.specs2" % "specs2-mock_2.12" % specs2Version % "test"
 )

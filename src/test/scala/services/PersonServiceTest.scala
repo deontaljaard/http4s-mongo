@@ -16,8 +16,8 @@ class PersonServiceTest extends Specification
 
   override val personService = new PersonServiceImpl
 
-  val eventualPerson = Task(Person("Deon", "Taljaard"))
   val personId = new ObjectId().toString
+  val eventualPerson = Task(Person(personId, "Deon", "Taljaard"))
 
   // mocks
   personRepository.findById(anyString) returns eventualPerson

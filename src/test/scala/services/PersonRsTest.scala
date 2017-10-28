@@ -27,7 +27,7 @@ class PersonRsTest extends Specification
 
 
   val findPersonByIdRequest = Request(GET, buildUrlWithPathParam(PersonRs.PERSONS, userId))
-  val person = Person(new ObjectId(userId), "Deon", "Taljaard")
+  val person = Person(userId, "Deon", "Taljaard")
   val eventualPerson = Task(person)
 
   // mocks
