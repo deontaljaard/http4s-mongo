@@ -1,7 +1,7 @@
-package services.person
+package services
 
 import cats.data.{NonEmptyList, Validated}
-import core.person.{AsyncPersonRegistry, PersonService, PersonServiceComponent}
+import core.person.{PersonRegistry, PersonService}
 import fs2.Task
 import io.circe.generic.auto._
 import model.person._
@@ -11,7 +11,10 @@ import org.http4s.dsl._
 
 object PersonRs {
 
-  val PERSONS = "persons"
+  def apply(personRegistry: PersonRegistry): PersonRs =
+    new PersonRs(personRegistry)
+
+  val PERSONS: String = "persons"
 
   def getValidationErrors(validationResult: Validated[NonEmptyList[String], String]): String =
     validationResult.fold( { s => s.toList.mkString(", ") }, { _ => "No validation errors" } )
@@ -20,18 +23,14 @@ object PersonRs {
   private val errorHandler: PartialFunction[Throwable, Task[Response]] = {
     case e: MatchError => BadRequest(s"The request was probably not well-formed. Msg = ${e.getMessage}")
   }
-
-  val personRs: PersonRs = new PersonRs(AsyncPersonRegistry)
-  val service: HttpService = personRs.personRsService
 }
 
-class PersonRs(personServiceComponent: PersonServiceComponent) {
+class PersonRs(personRegistry: PersonRegistry) {
   import PersonRs._
   import services.Encoders.booleanEncoder
-
   implicit def personEncoder: EntityEncoder[Person] = jsonEncoderOf[Person]
 
-  val personService: PersonService = personServiceComponent.personService
+  val personService: PersonService = personRegistry.personService
 
   val personRsService = HttpService {
     case GET -> Root / PERSONS / personId =>

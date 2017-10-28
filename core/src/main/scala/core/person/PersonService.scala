@@ -3,14 +3,14 @@ package core.person
 import fs2.Task
 import model.person.{Person, PersonRepository, PersonRepositoryComponent}
 
-sealed trait PersonRegistry extends PersonServiceComponent with PersonRepositoryComponent
+trait PersonRegistry extends PersonServiceComponent with PersonRepositoryComponent
 
-case object AsyncPersonRegistry extends PersonRegistry {
+object AsyncPersonRegistry extends PersonRegistry {
   override val personRepository: PersonRepository = new AsyncMongoPersonRepository
   override val personService: PersonService = new PersonServiceImpl
 }
 
-case object ReactivePersonRegistry extends PersonRegistry {
+object ReactivePersonRegistry extends PersonRegistry {
   override val personRepository: PersonRepository = new ReactiveMongoPersonRepository
   override val personService: PersonService = new PersonServiceImpl
 }
