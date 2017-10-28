@@ -1,16 +1,13 @@
-package services
+package services.person
 
+import cats.data.{NonEmptyList, Validated}
+import core.person.{AsyncPersonRegistry, PersonService, PersonServiceComponent}
 import fs2.Task
 import io.circe.generic.auto._
-import model.person.{AsyncPersonRegistry, _}
-import model.mongodb.clients.async.AsyncMongoOps._
-import common.Implicits._
-import Implicits._
-import cats.data.{NonEmptyList, Validated}
+import model.person._
 import org.http4s._
 import org.http4s.circe._
 import org.http4s.dsl._
-import services.PersonRs._
 
 object PersonRs {
 
@@ -29,6 +26,8 @@ object PersonRs {
 }
 
 class PersonRs(personServiceComponent: PersonServiceComponent) {
+  import PersonRs._
+  import services.Encoders.booleanEncoder
 
   implicit def personEncoder: EntityEncoder[Person] = jsonEncoderOf[Person]
 

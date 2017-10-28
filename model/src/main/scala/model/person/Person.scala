@@ -2,9 +2,9 @@ package model.person
 
 import java.util.UUID
 
-import cats.data.Validated.{invalid, valid}
+import cats.data.Validated.{invalid, valid, _}
 import cats.data.{Validated, NonEmptyList => NEL}
-import cats.implicits._
+import cats.syntax.cartesian._
 
 case class Person(id: String, firstName: String, lastName: String)
 

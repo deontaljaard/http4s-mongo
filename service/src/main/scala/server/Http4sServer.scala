@@ -7,11 +7,13 @@ import fs2.Task
 import org.http4s.HttpService
 import org.http4s.server.blaze.BlazeBuilder
 import org.http4s.util.StreamApp
-import services.{AuthRs, HelloRs, PersonRs}
+import services.HelloRs
+import services.auth.AuthRs
+import services.person.PersonRs
 
 import scala.util.Properties.envOrNone
 
-object ScalaMongoServer extends StreamApp {
+object Http4sServer extends StreamApp {
 
   val port : Int              = envOrNone("HTTP_PORT") map (_.toInt) getOrElse 8080
   val ip   : String           = "0.0.0.0"

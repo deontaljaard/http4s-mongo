@@ -12,7 +12,6 @@ import org.mongodb.scala.result.{DeleteResult, UpdateResult}
 import org.mongodb.scala.{Completed, FindObservable, MongoCollection, SingleObservable}
 import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.bson.{BSONDocument, BSONDocumentReader, BSONDocumentWriter, BSONObjectID, document, Macros => ReactiveMacros}
-import common.Implicits.strategy
 import scala.concurrent.Future
 
 trait PersonRepository {
@@ -29,6 +28,7 @@ trait PersonRepositoryComponent {
   val personRepository: PersonRepository
 
   import scala.concurrent.ExecutionContext.Implicits.global
+  import common.Implicits.strategy
 
   class AsyncMongoPersonRepository extends PersonRepository {
     import org.mongodb.scala.model.Filters._

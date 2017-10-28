@@ -1,4 +1,4 @@
-package services
+package services.auth
 
 import fs2.Task
 import io.circe.generic.auto._
