@@ -37,11 +37,10 @@ class PersonRs(personRegistry: PersonRegistry) {
       personService.findById(personId).flatMap(Ok(_))//.handleWith(errorHandler)
 
     case req @ POST -> Root / PERSONS =>
-      val resp = for {
+      for {
         personNoId <- req.as(jsonOf[PersonNoId])
         resp <- personService.insertPerson(Person.toPersonWithId(personNoId)).flatMap(Ok(_))
       } yield resp
-      resp//.handleWith(errorHandler)
 
     case req @ PUT -> Root / PERSONS =>
       for {

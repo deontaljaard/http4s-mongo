@@ -6,7 +6,6 @@ import org.http4s.circe._
 import org.http4s.dsl._
 
 object HelloRs {
-
   val HELLO: String = "hello"
 
   val service = HttpService {
