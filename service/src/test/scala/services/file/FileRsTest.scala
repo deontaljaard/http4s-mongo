@@ -50,7 +50,7 @@ class FileRsTest extends Specification
       case Some(resp) =>
         true must_== true
       case None =>
-        fail("In returnGreeting: no response returned...")
+        fail("In uploadFile: no response returned...")
     }
   }
 }
