@@ -11,7 +11,7 @@ import scala.collection.JavaConverters._
 object AsyncMongoClientFactory {
 
   //TODO: read connection URL from environment variable
-  val clusterSettings: ClusterSettings = ClusterSettings.builder().hosts(List(new ServerAddress("localhost")).asJava).build()
+  val clusterSettings: ClusterSettings = ClusterSettings.builder().hosts(List(new ServerAddress("172.17.0.2")).asJava).build()
   val settings: MongoClientSettings = MongoClientSettings.builder().clusterSettings(clusterSettings).build()
   val mongoClient: MongoClient = MongoClient(settings)
 

@@ -10,7 +10,7 @@ import scala.concurrent.Future
 object ReactiveMongoClientFactory {
   val driver = MongoDriver()
 
-  val connection: MongoConnection = driver.connection(List("localhost"))
+  val connection: MongoConnection = driver.connection(List("172.17.0.2"))
 
   private def getDatabase(databaseName: String): Future[DefaultDB] = connection.database(databaseName)
 

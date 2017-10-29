@@ -50,7 +50,7 @@ trait PersonRepositoryComponent {
 
     private val personCodecProvider: CodecProvider = AsyncMacros.createCodecProvider[AsyncMongoPerson]()
     private val personCollection: MongoCollection[AsyncMongoPerson] =
-      AsyncMongoClientFactory.getDatabase("a_mydb", personCodecProvider).getCollection("person")
+      AsyncMongoClientFactory.getDatabase("demo", personCodecProvider).getCollection("person")
 
     def idEqual(objectId: String): Bson =
       equal("_id", new ObjectId(objectId))
@@ -82,7 +82,7 @@ trait PersonRepositoryComponent {
   }
 
   class ReactiveMongoPersonRepository extends PersonRepository {
-    val personCollection: Future[BSONCollection] = ReactiveMongoClientFactory.collectionFromDataBase("a_mydb", "person")
+    val personCollection: Future[BSONCollection] = ReactiveMongoClientFactory.collectionFromDataBase("demo", "person")
 
     case class ReactiveMongoPerson(_id: BSONObjectID, firstName: String, lastName: String)
 
