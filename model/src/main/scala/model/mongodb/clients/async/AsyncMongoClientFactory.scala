@@ -1,5 +1,6 @@
 package model.mongodb.clients.async
 
+import common.AppConfig
 import org.bson.codecs.configuration.CodecProvider
 import org.bson.codecs.configuration.CodecRegistries.{fromProviders, fromRegistries}
 import org.mongodb.scala.bson.codecs.DEFAULT_CODEC_REGISTRY
@@ -11,7 +12,7 @@ import scala.collection.JavaConverters._
 object AsyncMongoClientFactory {
 
   //TODO: read connection URL from environment variable
-  val clusterSettings: ClusterSettings = ClusterSettings.builder().hosts(List(new ServerAddress("172.17.0.2")).asJava).build()
+  val clusterSettings: ClusterSettings = ClusterSettings.builder().hosts(List(new ServerAddress(AppConfig.DB_URL)).asJava).build()
   val settings: MongoClientSettings = MongoClientSettings.builder().clusterSettings(clusterSettings).build()
   val mongoClient: MongoClient = MongoClient(settings)
 
