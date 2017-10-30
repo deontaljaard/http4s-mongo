@@ -1,13 +1,19 @@
 package services
 
+import java.time.Year
+import java.util.UUID
+
 import cats.data.{NonEmptyList, Validated}
 import core.person.{PersonRegistry, PersonService}
 import fs2.Task
+import io.circe.Json
 import io.circe.generic.auto._
 import model.person._
 import org.http4s._
 import org.http4s.circe._
 import org.http4s.dsl._
+
+import scala.util.Try
 
 object PersonRs {
 
@@ -23,6 +29,18 @@ object PersonRs {
   private val errorHandler: PartialFunction[Throwable, Task[Response]] = {
     case e: MatchError => BadRequest(s"The request was probably not well-formed. Msg = ${e.getMessage}")
   }
+
+  implicit val personYearQueryParamMatcher: QueryParamDecoder[Year] =
+    QueryParamDecoder[Int].map(Year.of)
+
+  object PersonYearQueryParamMatcher extends QueryParamDecoderMatcher[Year]("year")
+
+  case class CustomUUID(value: String)
+
+  object CustomUUID {
+    def unapply(s: String): Option[CustomUUID] =
+      Try(Some(CustomUUID(s))).getOrElse(None)
+  }
 }
 
 class PersonRs(personRegistry: PersonRegistry) {
@@ -35,6 +53,12 @@ class PersonRs(personRegistry: PersonRegistry) {
   val personRsService = HttpService {
     case GET -> Root / PERSONS / personId =>
       personService.findById(personId).flatMap(Ok(_))//.handleWith(errorHandler)
+
+    case GET -> Root / PERSONS :? PersonYearQueryParamMatcher(year) =>
+      Ok(Json.obj("message" -> Json.fromString(s"Looking for person born in $year")))
+
+    case GET -> Root / PERSONS / "extractor" / CustomUUID(id) =>
+      Ok(Json.obj("message" -> Json.fromString(s"Custom UUID extractor $id")))
 
     case req @ POST -> Root / PERSONS =>
       for {

@@ -10,6 +10,6 @@ object HelloRs {
 
   val service = HttpService {
     case GET -> Root / HELLO / name =>
-      Ok(Json.obj("message" -> Json.fromString(s"Hello, ${name}")))
+      Ok(Json.obj("message" -> Json.fromString(s"Hello, $name")))
   }
 }

@@ -1,7 +1,5 @@
 package server
 
-import java.util.concurrent.{ExecutorService, Executors}
-
 import cats.implicits._
 import core.person.AsyncPersonRegistry
 import fs2.Task
@@ -16,9 +14,7 @@ import scala.util.Properties.envOrNone
 
 object Http4sServer extends StreamApp {
 
-  val port : Int              = envOrNone("HTTP_PORT") map (_.toInt) getOrElse 8080
-  val ip   : String           = "0.0.0.0"
-  val pool : ExecutorService  = Executors.newCachedThreadPool()
+  val port: Int = envOrNone("HTTP_PORT").map(_.toInt).getOrElse(8080)
 
   val services: HttpService = HelloRs.service |+|
     PersonRs(AsyncPersonRegistry).personRsService |+|
@@ -26,8 +22,9 @@ object Http4sServer extends StreamApp {
 
   override def stream(args: List[String]): fs2.Stream[Task, Nothing] = {
     BlazeBuilder
-    .bindHttp(8080, "localhost")
-    .mountService(services, "/api")
-    .serve
+      .bindHttp(port, "localhost")
+      .mountService(services, "/api")
+      .serve
   }
+
 }
