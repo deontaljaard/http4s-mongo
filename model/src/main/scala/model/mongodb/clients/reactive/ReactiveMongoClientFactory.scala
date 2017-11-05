@@ -20,7 +20,7 @@ object ReactiveMongoClientFactory {
       .map(_.collection(collectionName))
       .recover {
         case e: Throwable =>
-          throw new ConnectionException(
+          throw ConnectionException(
             s"Connection cannot be established. Reason: ${e.getMessage}")
       }
   }
