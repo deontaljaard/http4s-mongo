@@ -39,19 +39,13 @@ class PersonRsTest extends Specification
     val findPersonByIdRequest = Request(GET, buildUrlWithPathParam(PersonRs.PERSONS, person.id))
     val response = personRs(findPersonByIdRequest).unsafeRun
 
-    val result = response.toOption match {
+    response.toOption match {
       case Some(resp) =>
-        val eventualDecodedPerson = for {
-          p <- resp.as(jsonOf[Person])
-        } yield {
-          p == person
-        }
-        eventualDecodedPerson.unsafeRun
-      case None => false
+        val decodedPerson = resp.as(jsonOf[Person]).unsafeRun
+        decodedPerson.id must_== userId
+      case None =>
+        fail(s"Expected a decoded person with user id '$userId'")
     }
-
-    result must_== true
   }
-
 
 }
