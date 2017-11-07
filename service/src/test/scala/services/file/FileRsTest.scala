@@ -2,7 +2,7 @@ package services.file
 
 import java.io.File
 
-import core.file.FileRegistryTestEnvironment
+import core.file.{AwsS3FileRegistry, FileRegistryTestEnvironment}
 import fs2.Task
 import io.circe.generic.auto._
 import io.circe.syntax._
@@ -29,7 +29,7 @@ class FileRsTest extends Specification
    The 'File RESTful Service' should
     return a successful multi part response              $uploadFile"""
 
-  val fileRs: HttpService = FileRs(this).fileRsService
+  val fileRs: HttpService = FileRs(AwsS3FileRegistry).fileRsService
 
   // mocks
   fileService.uploadObject(any[FileMetaData], any[Array[Byte]]) returns Task.now(true)

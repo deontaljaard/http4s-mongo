@@ -5,7 +5,7 @@ import model.file.{FileMetaData, FileRepository, FileRepositoryComponent}
 
 trait FileRegistry extends FileServiceComponent with FileRepositoryComponent
 
-object AwsS3FileStorageRegistry extends FileRegistry {
+object AwsS3FileRegistry extends FileRegistry {
   override val fileRepository: FileRepository = new AwsS3FileRepository
   override val fileService: FileService = new FileServiceImpl
 }
@@ -19,7 +19,7 @@ trait FileServiceComponent {
 
   class FileServiceImpl extends FileService {
     override def uploadObject(fileMetaData: FileMetaData, fileData: Array[Byte]): Task[Boolean] =
-      uploadObject(fileMetaData, fileData)
+      fileRepository.uploadObject(fileMetaData, fileData)
   }
 
 }

@@ -6,7 +6,7 @@ import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 
 object S3ClientFactory {
 
-  lazy private val basicAWSCredentials = new BasicAWSCredentials("AKIAIFWITYNZ27R3ZZJA", "8XYyQKFl5xK0PhjxUgRudfvjnVXuq9OFtKaGx2ua")
+  lazy private val basicAWSCredentials = new BasicAWSCredentials("access-key", "secret-key")
 
   lazy private val awsStaticCredentialsProvider = new AWSStaticCredentialsProvider(basicAWSCredentials)
 

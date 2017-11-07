@@ -30,6 +30,7 @@ trait FileRepositoryComponent {
           val putObjectRequest = new PutObjectRequest(S3ClientFactory.s3Bucket, fileMetaData.resourceKey, fileContent, metadata)
 
           val putObjectResult = S3ClientFactory.s3Client.putObject(putObjectRequest)
+          //TODO: work on a cleaner comparison
           putObjectResult.getMetadata.getContentType != ""
         }.recover {
           case NonFatal(e) =>
