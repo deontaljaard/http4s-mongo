@@ -1,18 +1,23 @@
 package core.file
 
 import fs2.Task
-import model.file.{FileMetaData, FileStorageRepository}
+import model.file.{FileMetaData, FileRepository, FileRepositoryComponent}
 
-object AwsS3FileStorageRegistry extends
+trait FileRegistry extends FileServiceComponent with FileRepositoryComponent
 
-trait FileStorageService extends FileStorageRepository
+object AwsS3FileStorageRegistry extends FileRegistry {
+  override val fileRepository: FileRepository = new AwsS3FileRepository
+  override val fileService: FileService = new FileServiceImpl
+}
 
-trait FileStorageServiceComponent {
-  this: FileStorageRepository =>
+trait FileService extends FileRepository
 
-  val fileStorageService: FileStorageService
+trait FileServiceComponent {
+  this: FileRepositoryComponent =>
 
-  class FileStorageServiceImpl extends FileStorageService {
+  val fileService: FileService
+
+  class FileServiceImpl extends FileService {
     override def uploadObject(fileMetaData: FileMetaData, fileData: Array[Byte]): Task[Boolean] =
       uploadObject(fileMetaData, fileData)
   }

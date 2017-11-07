@@ -2,84 +2,129 @@ package services.file
 
 import java.nio.charset.CharacterCodingException
 
-import io.circe.generic.auto._
-import io.circe.syntax._
-import org.http4s.headers._
+import core.file.{FileRegistry, FileService}
 import fs2.Task
+import io.circe.generic.auto._
+import io.circe.parser._
+import model.file.FileMetaData
 import org.http4s.MediaType._
 import org.http4s._
-import org.http4s.dsl._
 import org.http4s.circe.jsonEncoderOf
-import org.http4s.multipart.{Boundary, Multipart, Part}
+import org.http4s.dsl._
+import org.http4s.headers._
+import org.http4s.multipart.{Multipart, Part}
 import scodec.bits.ByteVector
-import io.circe._, io.circe.parser._
+import services.file.FileRs.{FILES, JsonMetaData, MultipartResponse}
+import services.file.MultipartHelper._
 
 object FileRs {
+
+  def apply(fileRegistry: FileRegistry): FileRs =
+    new FileRs(fileRegistry)
+
   val FILES: String = "files"
 
   case class JsonMetaData(userId: String)
 
-  case class MultipartResponse(userId: String, fileName: String, contentType: `Content-Type`)
+  case class MultipartResponse(userId: String, fileName: String, successful: Boolean)
 
-  val service = HttpService {
-    case req@POST -> Root / FILES / "upload" =>
-      val v = for {
-        t <- req.as[Multipart]
-        _ = processMultipart(t)
-      } yield Ok()
-      v.flatMap(identity)
+  object MultipartResponse {
+    def empty: MultipartResponse = MultipartResponse("", "", successful = false)
   }
 
-  private def processMultipart(multipart: Multipart): Unit = {
+}
 
-    implicit def jsonMetaDataEncoder: EntityEncoder[JsonMetaData] = jsonEncoderOf[JsonMetaData]
+class FileRs(fileRegistry: FileRegistry) {
 
-    val headers: Headers = multipart.headers
-    println(s"Headers: $headers")
+  implicit def jsonMetaDataEncoder: EntityEncoder[JsonMetaData] = jsonEncoderOf[JsonMetaData]
 
-    val boundary: Boundary = multipart.boundary
-    println(s"boundary: $boundary")
+  implicit def multipartResponseEncoder: EntityEncoder[MultipartResponse] = jsonEncoderOf[MultipartResponse]
+
+  val fileService: FileService = fileRegistry.fileService
+
+  val fileRsService = HttpService {
+    case req@POST -> Root / FILES / "upload" =>
+      for {
+        t <- req.as[Multipart]
+        resp <- processMultipart(t).flatMap(Ok(_))
+      } yield resp
+  }
+
+  private def processMultipart(multipart: Multipart): Task[MultipartResponse] = {
 
     val parts: Vector[Part] = multipart.parts
-    println(s"Parts: $parts")
 
-    val vector = parts.map { part =>
+    parts.foldLeft(Task.delay(MultipartResponse.empty)) { case (eventualResponse, part) =>
       part.headers.get(`Content-Type`) match {
         case Some(`Content-Type`(`application/json`, _)) =>
           println("Process JSON payload")
-          val jsonAsString = part.body.runLog.map(ByteVector(_))
-            .map(_.decodeUtf8)
-            .map(_.fold(g
-              { ex => println(ex); None },
-              { s =>
-                parse(s) match {
-                  case Left(e) => println(e); None
-                  case Right(_) => decode[JsonMetaData](s) match {
-                    case Left(error) => println(error); None
-                    case Right(js: JsonMetaData) => Some(js)
-                  }
-                }
-              })
-            )
-          println(s"---- ${jsonAsString.unsafeRun}")
+          processJsonMetaDataPart(eventualResponse, part)
         case Some(`Content-Type`(`image/png`, _)) =>
           println("Process image")
-          val imageByteVector: Task[ByteVector] = part.body.runLog.map(ByteVector(_))
-          println(s"Image byte vector ${imageByteVector.unsafeRun}")
-          val imageByteArray = imageByteVector.map(_.toArray)
-          println(s"Image byte array ${imageByteArray.unsafeRun.length}")
-        case _ => println("Unsupported content type in part. Ignoring.")
+          processFilePart(eventualResponse, part)
+        case unknownContentType =>
+          println(s"Unsupported content type in multipart request - '$unknownContentType'. Ignoring.")
+          eventualResponse
       }
-      val value: Task[Either[CharacterCodingException, String]] = part.body.runLog.map(ByteVector(_)).map(_.decodeUtf8)
-      value.unsafeValue
+    }
+  }
+
+  private def processJsonMetaDataPart(eventualResponse: Task[MultipartResponse], part: Part): Task[MultipartResponse] = {
+    val updateResponse: Option[JsonMetaData] => Task[MultipartResponse] =
+      maybeJsonMetaData => eventualResponse.map(_.copy(userId = maybeJsonMetaData.map(_.userId).getOrElse("")))
+
+    for {
+      byteVector <- partToByteVector(part)
+      decodedJsonString = byteVector.decodeUtf8
+      maybeJsonMetaData = decodedJsonString.fold(handleCodingException, parseJsonString)
+      response <- updateResponse(maybeJsonMetaData)
+    } yield {
+      response
+    }
+  }
+
+  private def processFilePart(eventualResponse: Task[MultipartResponse], part: Part): Task[MultipartResponse] = {
+    val updateResponse: (String, Boolean) => Task[MultipartResponse] =
+      (fileName, successful) => eventualResponse.map(_.copy(fileName = fileName, successful = successful))
+
+    for {
+      byteVector <- partToByteVector(part)
+      fileData = byteVector.toArray
+      partName = part.name.get
+      partialResponse <- eventualResponse
+      successful <- fileService.uploadObject(FileMetaData(partialResponse.userId), fileData)
+      response <- updateResponse(partName, successful)
+    } yield {
+      response
+    }
+  }
+
+}
+
+object MultipartHelper {
+  val handleCodingException: CharacterCodingException => Option[JsonMetaData] =
+    ex => {
+      println(ex)
+      None
     }
 
-    println("Decoded multipart" + vector)
-  }
+  val partToByteVector: Part => Task[ByteVector] =
+    _.body.runLog.map(ByteVector(_))
 
-  private def processMultipartRequest(request: Request): Unit = {
-    println(request.body)
-    val multipart = EntityDecoder[Multipart].decode(request, strict = true)
-    println(multipart.value.unsafeRunSync)
-  }
+  //TODO: Parameterize this function
+  val decodeJsonString: String => Option[JsonMetaData] =
+    json => decode[JsonMetaData](json) match {
+      case Left(error) => println(error)
+        None
+      case Right(js: JsonMetaData) => Some(js)
+    }
+
+  //TODO: Parameterize this function
+  val parseJsonString: String => Option[JsonMetaData] =
+    json => parse(json) match {
+      case Left(e) => println(e)
+        None
+      case Right(_) => decodeJsonString(json)
+    }
+
 }

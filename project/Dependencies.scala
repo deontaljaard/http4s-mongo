@@ -42,6 +42,8 @@ object Dependencies {
   val nettyBuffer: ModuleID     = "io.netty" % "netty-buffer" % nettyVersion
 
   val iglJwt: ModuleID = "io.igl" %% "jwt" % jwtVersion
+  val awsS3Sdk: ModuleID = "com.amazonaws" % "aws-java-sdk-s3" % "1.11.224"
+//  val scalaAwsSdk: ModuleID = "com.github.dwhjames" %% "aws-wrap" % "0.8.0"
 
   // Test dependencies
   val specs2Core: ModuleID = "org.specs2" %% "specs2-core" % specs2Version
@@ -68,6 +70,7 @@ object Dependencies {
     mongoDriverCore,
     mongoDriverAsync,
     reactiveMongoScala,
+    awsS3Sdk
   ) ++ commonDependencies
 
   lazy val coreDependencies: Seq[ModuleID] = Nil ++ commonDependencies

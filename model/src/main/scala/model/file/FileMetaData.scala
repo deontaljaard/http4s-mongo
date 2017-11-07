@@ -1,5 +1,3 @@
 package model.file
 
-class FileMetaData {
-
-}
+case class FileMetaData(resourceKey: String)
