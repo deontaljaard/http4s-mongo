@@ -10,7 +10,37 @@ sbt service/run
 ```
 
 # Invoke hello endpoint
+### GET to /hello/<name>
 ```bash
 time curl -i http://localhost:8080/api/hello/http4s
 ```
+# Invoke person endpoint
 In order for the /person endpoint to work correctly, you require a MongoDB instance running somewhere. I prefer Docker, so if you want to get it working on your local machine, have a look at the Mongo Docker Repository [here](https://hub.docker.com/_/mongo/) and follow the guide. Just ensure the database and collection you configure aligns with the one's expected by the person repositories in the source.
+
+## Example requests to the /person endpoint:
+### GET to /persons/<person_id>
+```bash
+time curl http://localhost:8080/api/persons/<person_id>
+```
+
+### POST to /persons
+```bash
+time curl -i -H "Content-Type: application/json" -X POST -d '{"firstName":"Frodo", "lastName":"Baggins"}' http://localhost:8080/api/persons
+```
+
+# Invoke auth endpoint
+### POST - Basic auth to /login
+```bash
+time curl -i -H "Authorization: Basic dGVzdDp0ZXN0" -X POST http://localhost:8080/api/login
+```
+In the request header, dGVzdDp0ZXN0 is the Base64 encoded version of test:test.
+
+# Invoke files endpoint
+In order to upload a file, the service assumes a multipart request with two parts. The first part should contain JSON payload representing metadata accompanying the file to be uploaded. The second part contains the file to upload. The behaviour of this endpoint can be adapted to your use case. For example, it might be overkill to send a JSON payload describing the user id as one of the parts in the multipart request. In that case, simply capture the user id as a path param, like http://localhost:8080/api/files/<person_id>/upload.
+### POST to /files/upload
+```bash
+curl -i \
+  -F "metadata={\"userId\": \"4583745\"};type=application/json" \
+  -F "file=@/home/deon/Downloads/http4s.png;type=image/png" \
+  http://localhost:8080/api/files/upload
+```
