@@ -40,7 +40,7 @@ class FileRs(fileRegistry: FileRegistry) {
 
   implicit def multipartResponseEncoder: EntityEncoder[MultipartResponse] = jsonEncoderOf[MultipartResponse]
 
-  val fileService: FileService = fileRegistry.fileService
+  private val fileService: FileService = fileRegistry.fileService
 
   val fileRsService = HttpService {
     case req@POST -> Root / FILES / "upload" =>
