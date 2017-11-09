@@ -44,3 +44,15 @@ curl -i \
   -F "file=@/home/deon/Downloads/http4s.png;type=image/png" \
   http://localhost:8080/api/files/upload
 ```
+
+# Special notes
+If you're running the Java 9 JDK, you'll probably encounter a
+```java
+Caused by: java.lang.ClassNotFoundException: javax.xml.bind.JAXBException
+```
+when you use the upload utility that communicates with S3. This is because JAXB APIs are no longer contained in the default class path in Java SE 9.
+
+To address this, you can run the service with the following command:
+```bash
+env JAVA_OPTS="--add-modules=java.xml.bind,java.activation" sbt service/run
+```
