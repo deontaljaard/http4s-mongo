@@ -1,5 +1,6 @@
 package model.file
 
+import com.typesafe.scalalogging.{LazyLogging, Logger}
 import fs2.Task
 import model.file.storage.clients.s3.S3ClientFactory
 
@@ -10,7 +11,7 @@ trait FileRepository {
   def uploadObject(fileMetaData: FileMetaData, fileData: Array[Byte]): Task[Boolean]
 }
 
-trait FileRepositoryComponent {
+trait FileRepositoryComponent extends LazyLogging {
   val fileRepository: FileRepository
 
   class AwsS3FileRepository extends FileRepository {
@@ -34,8 +35,7 @@ trait FileRepositoryComponent {
           putObjectResult.getMetadata.getContentType != ""
         }.recover {
           case NonFatal(e) =>
-            //TODO: Add proper logging that includes more detail (e.g. stacktrace)
-            println(s"An error occurred while trying to upload file. Reason ${e.getMessage}")
+            logger.error(s"An error occurred while trying to upload file. Reason ${e.getMessage}", e)
             false
         }.getOrElse(false)
       }
