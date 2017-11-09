@@ -2,6 +2,7 @@ package services.file
 
 import java.nio.charset.CharacterCodingException
 
+import com.typesafe.scalalogging.LazyLogging
 import core.file.{FileRegistry, FileService}
 import fs2.Task
 import io.circe.generic.auto._
@@ -34,7 +35,7 @@ object FileRs {
 
 }
 
-class FileRs(fileRegistry: FileRegistry) {
+class FileRs(fileRegistry: FileRegistry) extends LazyLogging {
 
   implicit def jsonMetaDataEncoder: EntityEncoder[JsonMetaData] = jsonEncoderOf[JsonMetaData]
 
@@ -57,13 +58,13 @@ class FileRs(fileRegistry: FileRegistry) {
     parts.foldLeft(Task.delay(MultipartResponse.empty)) { case (eventualResponse, part) =>
       part.headers.get(`Content-Type`) match {
         case Some(`Content-Type`(`application/json`, _)) =>
-          println("Process JSON payload")
+          logger.debug("Process JSON payload")
           processJsonMetaDataPart(eventualResponse, part)
         case Some(`Content-Type`(`image/png`, _)) =>
-          println("Process image")
+          logger.debug("Process image")
           processFilePart(eventualResponse, part)
         case unknownContentType =>
-          println(s"Unsupported content type in multipart request - '$unknownContentType'. Ignoring.")
+          logger.error(s"Unsupported content type in multipart request - '$unknownContentType'. Ignoring.")
           eventualResponse
       }
     }
