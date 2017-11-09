@@ -6,13 +6,15 @@ object Dependencies {
   val fs2IOVersion = "0.9.7"
   val http4sVersion = "0.17.5"
   val circeVersion = "0.8.0"
-  val logbackClassicVersion = "1.2.1"
+  val scalaLoggingVersion = "3.7.2"
+  val logbackClassicVersion = "1.2.3"
   val mongoScalaVersion = "2.1.0"
   val reactiveMongoScalaVersion = "0.12.5"
   val mongoJavaVersion = "3.4.2"
   val nettyVersion = "4.1.15.Final"
   val specs2Version = "4.0.0"
   val jwtVersion = "1.2.2"
+  val awsS3SdkVersion = "1.11.224"
 
   // Compile Dependencies
   val catsCore: ModuleID = "org.typelevel" %% "cats-core" % catsCoreVersion
@@ -27,6 +29,7 @@ object Dependencies {
   val circeGeneric: ModuleID  = "io.circe" %% "circe-generic" % circeVersion
   val circeParser: ModuleID   = "io.circe" %% "circe-parser" % circeVersion
 
+  val scalaLogging: ModuleID = "com.typesafe.scala-logging" %% "scala-logging" % scalaLoggingVersion
   val logbackCore: ModuleID     = "ch.qos.logback" % "logback-core" % logbackClassicVersion
   val logbackClassic: ModuleID  = "ch.qos.logback" % "logback-classic" % logbackClassicVersion
 
@@ -42,8 +45,7 @@ object Dependencies {
   val nettyBuffer: ModuleID     = "io.netty" % "netty-buffer" % nettyVersion
 
   val iglJwt: ModuleID = "io.igl" %% "jwt" % jwtVersion
-  val awsS3Sdk: ModuleID = "com.amazonaws" % "aws-java-sdk-s3" % "1.11.224"
-//  val scalaAwsSdk: ModuleID = "com.github.dwhjames" %% "aws-wrap" % "0.8.0"
+  val awsS3Sdk: ModuleID = "com.amazonaws" % "aws-java-sdk-s3" % awsS3SdkVersion
 
   // Test dependencies
   val specs2Core: ModuleID = "org.specs2" %% "specs2-core" % specs2Version
@@ -54,6 +56,7 @@ object Dependencies {
     catsCore,
     fs2Cats,
     fs2IO,
+    scalaLogging,
     logbackCore,
     logbackClassic,
     circeCore,
