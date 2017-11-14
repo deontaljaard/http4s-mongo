@@ -9,10 +9,10 @@ lazy val common = (project in file("common"))
   )
 
 lazy val model = (project in file("model"))
-    .settings(
-      Commons.settings,
-      libraryDependencies ++= modelDependencies
-    ).dependsOn(common)
+  .settings(
+    Commons.settings,
+    libraryDependencies ++= modelDependencies
+  ).dependsOn(common)
 
 lazy val core = (project in file("core"))
   .settings(
@@ -21,11 +21,12 @@ lazy val core = (project in file("core"))
   ).dependsOn(model)
 
 lazy val service = (project in file("service"))
-    .settings(
-      Commons.settings,
-      libraryDependencies ++= serviceDependencies,
-      mainClass in assembly := Some("server.Http4sServer")
-    ).dependsOn(core)
+  .settings(
+    Commons.settings,
+    libraryDependencies ++= serviceDependencies,
+    mainClass in assembly := Some("server.Http4sServer"),
+    parallelExecution in Test := false // https://github.com/mockito/mockito/issues/1067
+  ).dependsOn(core % "compile->compile;test->test")
 
 lazy val root = (project in file("."))
   .aggregate(common, model, core, service)
