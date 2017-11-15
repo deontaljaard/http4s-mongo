@@ -3,10 +3,21 @@ A reference project intended to be a starting point (reference) to use http4s an
 
 Working with the latest technology means that there's not always sufficient documentation for your use case. I started tinkering with http4s and the new async|reactive drivers for MongoDB. I thought I'd share it here for anybody else that is interested in using similar technologies.
 
-# Running the server
+# Running the service
+### Directly on your host
 In the root of the project, invoke the following command:
 ```bash
 sbt service/run
+```
+
+### Using docker (assuming it's set up on your host)
+In the root of the project, invoke the following commands:
+```bash
+sbt dockerize
+```
+followed by
+```bash
+docker run -d -p 8080:8080 --name http4s deontaljaard.github.io/service
 ```
 
 # Invoke hello endpoint
