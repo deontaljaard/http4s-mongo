@@ -7,7 +7,7 @@ object Commons {
   val settings: Seq[Def.Setting[_]] = Seq(
     organization := "deontaljaard.github.io",
     version := appVersion,
-    scalaVersion := "2.12.3",
+    scalaVersion := "2.12.4",
     resolvers := Resolvers.http4sMongoResolvers,
   )
 }

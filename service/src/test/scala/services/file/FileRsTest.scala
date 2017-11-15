@@ -2,15 +2,14 @@ package services.file
 
 import java.io.File
 
-import core.file.{AwsS3FileRegistry, FileRegistryTestEnvironment}
+import core.file.FileRegistryTestEnvironment
 import fs2.Task
 import io.circe.generic.auto._
 import io.circe.syntax._
 import model.file.FileMetaData
 import org.http4s.MediaType._
 import org.http4s._
-import org.http4s.circe.jsonEncoderOf
-import org.http4s.circe.jsonOf
+import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.headers._
 import org.http4s.multipart.{Multipart, Part}
 import org.specs2.Specification
@@ -29,7 +28,7 @@ class FileRsTest extends Specification
    The 'File RESTful Service' should
     return a successful multi part response              $uploadFile"""
 
-  val fileRs: HttpService = FileRs(AwsS3FileRegistry).fileRsService
+  val fileRs: HttpService = FileRs(this).fileRsService
 
   // mocks
   fileService.uploadObject(any[FileMetaData], any[Array[Byte]]) returns Task.now(true)
