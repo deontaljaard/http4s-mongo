@@ -12,6 +12,7 @@ import org.mongodb.scala.result.{DeleteResult, UpdateResult}
 import org.mongodb.scala.{Completed, FindObservable, MongoCollection, SingleObservable}
 import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.bson.{BSONDocument, BSONDocumentReader, BSONDocumentWriter, BSONObjectID, document, Macros => ReactiveMacros}
+
 import scala.concurrent.Future
 
 trait PersonRepository {
@@ -27,8 +28,9 @@ trait PersonRepository {
 trait PersonRepositoryComponent {
   val personRepository: PersonRepository
 
-  import scala.concurrent.ExecutionContext.Implicits.global
   import common.Implicits.strategy
+
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   class AsyncMongoPersonRepository extends PersonRepository {
     import org.mongodb.scala.model.Filters._
@@ -36,10 +38,10 @@ trait PersonRepositoryComponent {
     case class AsyncMongoPerson(_id: ObjectId, firstName: String, lastName: String)
 
     object AsyncMongoPerson {
-      def apply(person: Person): AsyncMongoPerson =
+      def fromPerson(person: Person): AsyncMongoPerson =
         AsyncMongoPerson(new ObjectId(), person.firstName, person.lastName)
 
-      def toAsyncMongoPerson(person: Person): AsyncMongoPerson =
+      def fromPersonWithId(person: Person): AsyncMongoPerson =
         AsyncMongoPerson(new ObjectId(person.id), person.firstName, person.lastName)
 
       def toPerson(asyncMongoPerson: AsyncMongoPerson): Person =
@@ -50,7 +52,7 @@ trait PersonRepositoryComponent {
 
     private val personCodecProvider: CodecProvider = AsyncMacros.createCodecProvider[AsyncMongoPerson]()
     private val personCollection: MongoCollection[AsyncMongoPerson] =
-      AsyncMongoClientFactory.getDatabase("demo", personCodecProvider).getCollection("person")
+      AsyncMongoClientFactory.getDatabase("demo", Seq(personCodecProvider)).getCollection("person")
 
     def idEqual(objectId: String): Bson =
       equal("_id", new ObjectId(objectId))
@@ -63,13 +65,14 @@ trait PersonRepositoryComponent {
     }
 
     def insertPerson(person: Person): Task[Person] = {
-      val observableInsert: SingleObservable[Completed] = personCollection.insertOne(AsyncMongoPerson(person))
+      val asyncMongoPerson = fromPerson(person)
+      val observableInsert: SingleObservable[Completed] = personCollection.insertOne(asyncMongoPerson)
 
-      fromFuture(observableInsert.head().map(_ => person))
+      fromFuture(observableInsert.head().map(_ => toPerson(asyncMongoPerson)))
     }
 
     def updatePerson(person: Person): Task[Boolean] = {
-      val observableUpdate: SingleObservable[UpdateResult] = personCollection.replaceOne(idEqual(person.id), toAsyncMongoPerson(person))
+      val observableUpdate: SingleObservable[UpdateResult] = personCollection.replaceOne(idEqual(person.id), fromPersonWithId(person))
 
       fromFuture(observableUpdate.head().map(_.wasAcknowledged))
     }
@@ -87,19 +90,20 @@ trait PersonRepositoryComponent {
     case class ReactiveMongoPerson(_id: BSONObjectID, firstName: String, lastName: String)
 
     object ReactiveMongoPerson {
-      def apply(person: Person): ReactiveMongoPerson =
+      def fromPerson(person: Person): ReactiveMongoPerson =
         ReactiveMongoPerson(BSONObjectID.generate, person.firstName, person.lastName)
+
+      def fromPersonWithId(person: Person): ReactiveMongoPerson =
+        ReactiveMongoPerson(BSONObjectID.parse(person.id).get, person.firstName, person.lastName)
 
       def toPerson(reactiveMongoPerson: ReactiveMongoPerson): Person =
         Person(reactiveMongoPerson._id.stringify, reactiveMongoPerson.firstName, reactiveMongoPerson.lastName)
-
-      def toReactiveMongoPerson(person: Person): ReactiveMongoPerson =
-        ReactiveMongoPerson(BSONObjectID.parse(person.id).get, person.firstName, person.lastName)
     }
 
     import ReactiveMongoPerson._
 
     implicit def personReader: BSONDocumentReader[ReactiveMongoPerson] = ReactiveMacros.reader[ReactiveMongoPerson]
+
     implicit def personWriter: BSONDocumentWriter[ReactiveMongoPerson] = ReactiveMacros.writer[ReactiveMongoPerson]
 
     //TODO: return optional
@@ -111,11 +115,11 @@ trait PersonRepositoryComponent {
     }
 
     override def insertPerson(person: Person): Task[Person] = {
-      val reactiveMongoPerson = ReactiveMongoPerson(person)
+      val reactiveMongoPerson = ReactiveMongoPerson.fromPerson(person)
 
       val eventualPerson = personCollection.flatMap(_.insert(reactiveMongoPerson))
         .flatMap { writeResult =>
-          if(writeResult.ok) Future.successful(toPerson(reactiveMongoPerson))
+          if (writeResult.ok) Future.successful(toPerson(reactiveMongoPerson))
           else Future.failed(new Exception(s"Failed to insert. Reason: ${writeResult.writeErrors}"))
         }
 
@@ -123,7 +127,7 @@ trait PersonRepositoryComponent {
     }
 
     override def updatePerson(person: Person): Task[Boolean] = {
-      val reactiveMongoPerson = toReactiveMongoPerson(person)
+      val reactiveMongoPerson = fromPersonWithId(person)
       val selector = document(
         "_id" -> BSONObjectID.parse(person.id).get,
       )

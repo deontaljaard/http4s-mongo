@@ -7,10 +7,10 @@ import fs2.Task
 import org.http4s.HttpService
 import org.http4s.server.blaze.BlazeBuilder
 import org.http4s.util.StreamApp
-import services.PersonRs
 import services.auth.AuthRs
 import services.file.FileRs
 import services.hello.HelloRs
+import services.person.PersonRs
 
 import scala.util.Properties.envOrNone
 

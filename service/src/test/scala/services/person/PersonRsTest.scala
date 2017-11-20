@@ -11,7 +11,6 @@ import org.http4s.circe.jsonOf
 import org.mongodb.scala.bson.ObjectId
 import org.specs2.Specification
 import org.specs2.matcher.{ThrownExpectations, ThrownMessages}
-import services.PersonRs
 import services.RsTestHelper._
 
 class PersonRsTest extends Specification
