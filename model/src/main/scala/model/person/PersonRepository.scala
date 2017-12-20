@@ -120,7 +120,7 @@ trait PersonRepositoryComponent {
 
     implicit object TestReader extends BSONReader[BSONString, Status] {
       def read(bson: BSONString): Status = bson match {
-        case BSONString("EnumVal1") => Active
+        case BSONString("Active") => Active
         case _ => Inactive
       }
     }
