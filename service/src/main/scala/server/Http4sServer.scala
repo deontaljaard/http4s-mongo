@@ -2,7 +2,7 @@ package server
 
 import cats.implicits._
 import core.file.AwsS3FileRegistry
-import core.person.AsyncPersonRegistry
+import core.person.{AsyncPersonRegistry, ReactivePersonRegistry}
 import fs2.Task
 import org.http4s.HttpService
 import org.http4s.server.blaze.BlazeBuilder
@@ -19,7 +19,7 @@ object Http4sServer extends StreamApp {
   val port: Int = envOrNone("HTTP_PORT").map(_.toInt).getOrElse(8080)
 
   val services: HttpService = HelloRs.service |+|
-    PersonRs(AsyncPersonRegistry).personRsService |+|
+    PersonRs(ReactivePersonRegistry).personRsService |+|
     FileRs(AwsS3FileRegistry).fileRsService |+|
     AuthRs.service
 
