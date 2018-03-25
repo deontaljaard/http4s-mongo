@@ -1,33 +1,33 @@
 import sbt._
 
 object Dependencies {
-  val catsCoreVersion = "0.9.0"
-  val fs2CatsVersion = "0.3.0"
-  val fs2IOVersion = "0.9.7"
-  val http4sVersion = "0.17.5"
-  val circeVersion = "0.8.0"
-  val scalaLoggingVersion = "3.7.2"
+  val catsCoreVersion = "1.1.0"
+//  val fs2CatsVersion = "0.5.0"
+  val fs2IOVersion = "0.10.3"
+  val http4sVersion = "0.18.4"
+  val circeVersion = "0.9.2"
+  val scalaLoggingVersion = "3.8.0"
   val logbackClassicVersion = "1.2.3"
   val mongoScalaVersion = "2.1.0"
-  val reactiveMongoScalaVersion = "0.12.5"
+  val reactiveMongoScalaVersion = "0.13.0"
   val mongoJavaVersion = "3.4.2"
-  val nettyVersion = "4.1.15.Final"
-  val specs2Version = "4.0.0"
+  val nettyVersion = "4.1.22.Final"
+  val specs2Version = "4.0.2"
   val jwtVersion = "1.2.2"
-  val awsS3SdkVersion = "1.11.224"
+  val awsS3SdkVersion = "1.11.301"
 
   // Compile Dependencies
   val catsCore: ModuleID = "org.typelevel" %% "cats-core" % catsCoreVersion
-  val fs2Cats: ModuleID = "co.fs2" %% "fs2-cats" % fs2CatsVersion
+//  val fs2Cats: ModuleID = "co.fs2" %% "fs2-cats" % fs2CatsVersion
   val fs2IO: ModuleID = "co.fs2" %% "fs2-io" % fs2IOVersion
 
   val http4sBlazeServer: ModuleID = "org.http4s" %% "http4s-blaze-server" % http4sVersion
   val http4sCirce: ModuleID       = "org.http4s" %% "http4s-circe" % http4sVersion
   val http4sDsl: ModuleID         = "org.http4s" %% "http4s-dsl" % http4sVersion
 
-  val circeCore: ModuleID     = "io.circe" %% "circe-core" % circeVersion
-  val circeGeneric: ModuleID  = "io.circe" %% "circe-generic" % circeVersion
-  val circeParser: ModuleID   = "io.circe" %% "circe-parser" % circeVersion
+//  val circeCore: ModuleID     = "io.circe" %% "circe-core" % circeVersion
+//  val circeGeneric: ModuleID  = "io.circe" %% "circe-generic" % circeVersion
+//  val circeParser: ModuleID   = "io.circe" %% "circe-parser" % circeVersion
 
   val scalaLogging: ModuleID = "com.typesafe.scala-logging" %% "scala-logging" % scalaLoggingVersion
   val logbackCore: ModuleID     = "ch.qos.logback" % "logback-core" % logbackClassicVersion
@@ -54,14 +54,14 @@ object Dependencies {
   // Module dependencies
   lazy val commonDependencies: Seq[ModuleID] = Seq(
     catsCore,
-    fs2Cats,
+//    fs2Cats,
     fs2IO,
     scalaLogging,
     logbackCore,
     logbackClassic,
-    circeCore,
-    circeGeneric,
-    circeParser,
+//    circeCore,
+//    circeGeneric,
+//    circeParser,
     specs2Core % Test,
     specs2Mock % Test
   )

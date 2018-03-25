@@ -1,18 +1,16 @@
 package services
 
 import java.time.Year
-import java.util.UUID
 
 import cats.data.{NonEmptyList, Validated}
 import core.person.{PersonRegistry, PersonService}
-import fs2.Task
 import io.circe.Json
-import io.circe.generic.auto._
 import model.person._
 import org.http4s._
 import org.http4s.circe._
-import org.http4s.dsl._
-
+import cats.effect._
+import org.http4s._
+import org.http4s.dsl.io._
 import scala.util.Try
 
 object PersonRs {
@@ -26,7 +24,7 @@ object PersonRs {
     validationResult.fold( { s => s.toList.mkString(", ") }, { _ => "No validation errors" } )
 
   // One can potentially provide context to the error handler: e.g. from GET -> Root, pass in the userId
-  private val errorHandler: PartialFunction[Throwable, Task[Response]] = {
+  private val errorHandler: PartialFunction[Throwable, IO[Response]] = {
     case e: MatchError => BadRequest(s"The request was probably not well-formed. Msg = ${e.getMessage}")
   }
 
@@ -45,12 +43,11 @@ object PersonRs {
 
 class PersonRs(personRegistry: PersonRegistry) {
   import PersonRs._
-  import services.Encoders.booleanEncoder
-  implicit def personEncoder: EntityEncoder[Person] = jsonEncoderOf[Person]
+  implicit def personEncoder: EntityEncoder[IO, Person] = jsonEncoderOf[IO, Person]
 
   val personService: PersonService = personRegistry.personService
 
-  val personRsService = HttpService {
+  val personRsService = HttpService[IO] {
     case GET -> Root / PERSONS / personId =>
       personService.findById(personId).flatMap(Ok(_))//.handleWith(errorHandler)
 

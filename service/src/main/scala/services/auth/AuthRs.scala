@@ -1,28 +1,28 @@
 package services.auth
 
-import fs2.Task
-import io.circe.generic.auto._
+import org.http4s.server.middleware.authentication.BasicAuth.1syntax._
+import cats.effect._
 import io.igl.jwt._
 import model.person.Person
 import org.http4s._
-import org.http4s.circe.jsonEncoderOf
-import org.http4s.dsl._
-import org.http4s.server.middleware.authentication.BasicAuth
+import org.http4s.circe.{jsonEncoderOf, _}
+import org.http4s.dsl.io._
+import org.http4s.implicits._
 import org.joda.time.{DateTime, DateTimeZone}
-import JwtHelper._
+import services.auth.JwtHelper._
 
 object AuthRs {
 
-  implicit def personEncoder: EntityEncoder[Person] = jsonEncoderOf[Person]
+  implicit def personEncoder: EntityEncoder[IO, Person] = jsonEncoderOf[IO, Person]
 
-  private def checkCreds(credentials: BasicCredentials): Task[Option[Person]] =
-    if(credentials.username == "test") Task.now(Some(Person("346456456", "Deon", "Taljaard")))
-    else Task.now(None)
+  private def checkCreds(credentials: BasicCredentials): IO[Option[Person]] =
+    if(credentials.username == "test") IO.pure(Some(Person("346456456", "Deon", "Taljaard")))
+    else IO.pure(None)
 
-  private def authResponse(person: Person): Task[Response] =
+  private def authResponse(person: Person): IO[Response[IO]] =
     Ok(person).putHeaders(Header("access_token", buildJwtTokenForPerson(person)))
 
-  val authedService: AuthedService[Person] = AuthedService {
+  val authedService: AuthedService[Person, IO] = AuthedService {
     case POST -> Root / "login" as person =>
       authResponse(person)
   }
