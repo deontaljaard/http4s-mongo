@@ -2,16 +2,17 @@ package services.file
 
 import java.nio.charset.CharacterCodingException
 
+import cats.effect.IO
 import com.typesafe.scalalogging.LazyLogging
 import core.file.{FileRegistry, FileService}
-import fs2.Task
 import io.circe.generic.auto._
 import io.circe.parser._
 import model.file.FileMetaData
 import org.http4s.MediaType._
 import org.http4s._
 import org.http4s.circe.jsonEncoderOf
-import org.http4s.dsl._
+import org.http4s.dsl.io._
+import org.http4s.implicits._
 import org.http4s.headers._
 import org.http4s.multipart.{Multipart, Part}
 import scodec.bits.ByteVector
@@ -37,25 +38,25 @@ object FileRs {
 
 class FileRs(fileRegistry: FileRegistry) extends LazyLogging {
 
-  implicit def jsonMetaDataEncoder: EntityEncoder[JsonMetaData] = jsonEncoderOf[JsonMetaData]
+  implicit def jsonMetaDataEncoder: EntityEncoder[IO, JsonMetaData] = jsonEncoderOf[IO, JsonMetaData]
 
-  implicit def multipartResponseEncoder: EntityEncoder[MultipartResponse] = jsonEncoderOf[MultipartResponse]
+  implicit def multipartResponseEncoder: EntityEncoder[IO, MultipartResponse] = jsonEncoderOf[IO, MultipartResponse]
 
   private val fileService: FileService = fileRegistry.fileService
 
-  val fileRsService = HttpService {
+  val fileRsService = HttpService[IO] {
     case req@POST -> Root / FILES / "upload" =>
       for {
-        t <- req.as[Multipart]
+        t <- req.as[Multipart[IO]]
         resp <- processMultipart(t).flatMap(Ok(_))
       } yield resp
   }
 
-  private def processMultipart(multipart: Multipart): Task[MultipartResponse] = {
+  private def processMultipart(multipart: Multipart[IO]): IO[MultipartResponse] = {
 
-    val parts: Vector[Part] = multipart.parts
+    val parts: Vector[Part[IO]] = multipart.parts
 
-    parts.foldLeft(Task.delay(MultipartResponse.empty)) { case (eventualResponse, part) =>
+    parts.foldLeft(IO(MultipartResponse.empty)) { case (eventualResponse, part) =>
       part.headers.get(`Content-Type`) match {
         case Some(`Content-Type`(`application/json`, _)) =>
           logger.debug("Process JSON payload")
@@ -70,8 +71,8 @@ class FileRs(fileRegistry: FileRegistry) extends LazyLogging {
     }
   }
 
-  private def processJsonMetaDataPart(eventualResponse: Task[MultipartResponse], part: Part): Task[MultipartResponse] = {
-    val updateResponse: Option[JsonMetaData] => Task[MultipartResponse] =
+  private def processJsonMetaDataPart(eventualResponse: IO[MultipartResponse], part: Part[IO]): IO[MultipartResponse] = {
+    val updateResponse: Option[JsonMetaData] => IO[MultipartResponse] =
       maybeJsonMetaData => eventualResponse.map(_.copy(userId = maybeJsonMetaData.map(_.userId).getOrElse("")))
 
     for {
@@ -84,8 +85,8 @@ class FileRs(fileRegistry: FileRegistry) extends LazyLogging {
     }
   }
 
-  private def processFilePart(eventualResponse: Task[MultipartResponse], part: Part): Task[MultipartResponse] = {
-    val updateResponse: (String, Boolean) => Task[MultipartResponse] =
+  private def processFilePart(eventualResponse: IO[MultipartResponse], part: Part[IO]): IO[MultipartResponse] = {
+    val updateResponse: (String, Boolean) => IO[MultipartResponse] =
       (fileName, successful) => eventualResponse.map(_.copy(fileName = fileName, successful = successful))
 
     for {
@@ -109,8 +110,8 @@ object MultipartHelper {
       None
     }
 
-  val partToByteVector: Part => Task[ByteVector] =
-    _.body.runLog.map(ByteVector(_))
+  val partToByteVector: Part[IO] => IO[ByteVector] =
+    _.body.compile.toVector.map(ByteVector(_))
 
   //TODO: Parameterize this function
   val decodeJsonString: String => Option[JsonMetaData] =

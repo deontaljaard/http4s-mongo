@@ -5,6 +5,8 @@ import org.http4s.{HttpService, Request}
 import org.specs2.Specification
 import org.specs2.matcher.{ThrownExpectations, ThrownMessages}
 import services.RsTestHelper.buildUrlWithPathParam
+import cats.effect.IO
+import io.circe.generic.auto._
 
 class HelloRsTest extends Specification
   with ThrownExpectations
@@ -21,7 +23,7 @@ class HelloRsTest extends Specification
 
   def returnGreeting = {
     val name = "deon"
-    val greetingRequest = Request(GET, buildUrlWithPathParam(HelloRs.HELLO, name))
+    val greetingRequest = GET(buildUrlWithPathParam(HelloRs.HELLO, name))//Request[IO](GET, buildUrlWithPathParam(HelloRs.HELLO, name))
     val response = helloRs(greetingRequest).unsafeRun
 
     response.toOption match {

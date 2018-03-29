@@ -1,8 +1,7 @@
 package model.file
 
 import cats.effect.IO
-import com.typesafe.scalalogging.{LazyLogging, Logger}
-import fs2.Task
+import com.typesafe.scalalogging.LazyLogging
 import model.file.storage.clients.s3.S3ClientFactory
 
 import scala.util.Try
@@ -17,9 +16,9 @@ trait FileRepositoryComponent extends LazyLogging {
 
   class AwsS3FileRepository extends FileRepository {
 
-    import com.amazonaws.services.s3.model.ObjectMetadata
-    import com.amazonaws.services.s3.model.PutObjectRequest
     import java.io.ByteArrayInputStream
+
+    import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
 
     override def uploadObject(fileMetaData: FileMetaData, fileData: Array[Byte]): IO[Boolean] = {
       IO {

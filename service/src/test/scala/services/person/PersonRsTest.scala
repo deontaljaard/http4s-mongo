@@ -1,8 +1,7 @@
 package services.person
 
-import common.Implicits.strategy
+import cats.effect.IO
 import core.person.PersonRegistryTestEnvironment
-import fs2.Task
 import io.circe.generic.auto._
 import model.person.Person
 import org.http4s.Method._
@@ -26,17 +25,17 @@ class PersonRsTest extends Specification
    The 'Person RESTful Service' should
      find a services.person by id                               $findPersonById"""
 
-  val personRs: HttpService = PersonRs(this).personRsService
+  val personRs: HttpService[IO] = PersonRs(this).personRsService
   val userId: String = new ObjectId().toString
 
   val person: Person = Person(userId, "Deon", "Taljaard")
-  val eventualPerson: Task[Person] = Task(person)
+  val eventualPerson: IO[Person] = IO.pure(person)
 
   // mocks
   personService.findById(anyString) returns eventualPerson
 
   def findPersonById = {
-    val findPersonByIdRequest = Request(GET, buildUrlWithPathParam(PersonRs.PERSONS, person.id))
+    val findPersonByIdRequest = Request[IO](GET, buildUrlWithPathParam(PersonRs.PERSONS, person.id))
     val response = personRs(findPersonByIdRequest).unsafeRun
 
     response.toOption match {

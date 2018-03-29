@@ -1,30 +1,28 @@
 package services.auth
 
-import org.http4s.server.middleware.authentication.BasicAuth.1syntax._
 import cats.effect._
 import io.igl.jwt._
 import model.person.Person
 import org.http4s._
-import org.http4s.circe.{jsonEncoderOf, _}
+import org.http4s.circe._
+import io.circe.generic.auto._
+import io.circe.syntax._
 import org.http4s.dsl.io._
-import org.http4s.implicits._
+import org.http4s.server.middleware.authentication.BasicAuth
 import org.joda.time.{DateTime, DateTimeZone}
 import services.auth.JwtHelper._
 
 object AuthRs {
 
-  implicit def personEncoder: EntityEncoder[IO, Person] = jsonEncoderOf[IO, Person]
+//  implicit def personEncoder: EntityEncoder[IO, Person] = jsonEncoderOf[IO, Person]
 
   private def checkCreds(credentials: BasicCredentials): IO[Option[Person]] =
     if(credentials.username == "test") IO.pure(Some(Person("346456456", "Deon", "Taljaard")))
     else IO.pure(None)
 
-  private def authResponse(person: Person): IO[Response[IO]] =
-    Ok(person).putHeaders(Header("access_token", buildJwtTokenForPerson(person)))
-
   val authedService: AuthedService[Person, IO] = AuthedService {
     case POST -> Root / "login" as person =>
-      authResponse(person)
+      Ok(person.asJson, Header("X-Access-Token", buildJwtTokenForPerson(person)))
   }
 
   val basicAuthMiddleware = BasicAuth("Test Realm", checkCreds)

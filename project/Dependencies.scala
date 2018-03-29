@@ -25,9 +25,9 @@ object Dependencies {
   val http4sCirce: ModuleID       = "org.http4s" %% "http4s-circe" % http4sVersion
   val http4sDsl: ModuleID         = "org.http4s" %% "http4s-dsl" % http4sVersion
 
-//  val circeCore: ModuleID     = "io.circe" %% "circe-core" % circeVersion
-//  val circeGeneric: ModuleID  = "io.circe" %% "circe-generic" % circeVersion
-//  val circeParser: ModuleID   = "io.circe" %% "circe-parser" % circeVersion
+  val circeCore: ModuleID     = "io.circe" %% "circe-core" % circeVersion
+  val circeGeneric: ModuleID  = "io.circe" %% "circe-generic" % circeVersion
+  val circeParser: ModuleID   = "io.circe" %% "circe-parser" % circeVersion
 
   val scalaLogging: ModuleID = "com.typesafe.scala-logging" %% "scala-logging" % scalaLoggingVersion
   val logbackCore: ModuleID     = "ch.qos.logback" % "logback-core" % logbackClassicVersion
@@ -59,9 +59,9 @@ object Dependencies {
     scalaLogging,
     logbackCore,
     logbackClassic,
-//    circeCore,
-//    circeGeneric,
-//    circeParser,
+    circeCore,
+    circeGeneric,
+    circeParser,
     specs2Core % Test,
     specs2Mock % Test
   )

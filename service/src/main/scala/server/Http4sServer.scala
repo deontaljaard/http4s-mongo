@@ -16,12 +16,13 @@ import cats.implicits._
 import cats.effect._
 import org.http4s._
 import org.http4s.dsl.io._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.util.Properties.envOrNone
 
 object Http4sServer extends StreamApp[IO] {
 
-  val port: Int = envOrNone("HTTP_PORT").map(_.toInt).getOrElse(8080)
+  val port: Int = envOrNone("HTTP_PORT").map(_.toInt).getOrElse(8082)
 
   val services: HttpService[IO] = HelloRs.service /*<+>
     PersonRs(AsyncPersonRegistry).personRsService <+>
@@ -31,7 +32,7 @@ object Http4sServer extends StreamApp[IO] {
 
   override def stream(args: List[String], requestShutdown: IO[Unit]): Stream[IO, ExitCode] =
     BlazeBuilder[IO]
-      .bindHttp(8080, "0.0.0.0")
+      .bindHttp(port, "0.0.0.0")
       .mountService(services, "/api")
       .serve
 

@@ -4,6 +4,7 @@ package services.hello
 import cats.effect.IO
 import io.circe.Json
 import org.http4s._
+import org.http4s.circe._
 import org.http4s.dsl.io._
 
 object HelloRs {
