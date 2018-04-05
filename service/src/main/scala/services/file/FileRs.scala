@@ -2,6 +2,7 @@ package services.file
 
 import java.nio.charset.CharacterCodingException
 
+import cats.data.{Kleisli, OptionT}
 import cats.effect.IO
 import com.typesafe.scalalogging.LazyLogging
 import core.file.{FileRegistry, FileService}
@@ -44,7 +45,9 @@ class FileRs(fileRegistry: FileRegistry) extends LazyLogging {
 
   private val fileService: FileService = fileRegistry.fileService
 
-  val fileRsService = HttpService[IO] {
+  type OptionTIO[A] = OptionT[IO, A]
+
+  val fileRsService: Kleisli[OptionTIO, Request[IO], Response[IO]]  = HttpService[IO] {
     case req@POST -> Root / FILES / "upload" =>
       for {
         t <- req.as[Multipart[IO]]

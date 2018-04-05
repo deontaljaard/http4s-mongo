@@ -1,5 +1,6 @@
 package services.auth
 
+import cats.data.{Kleisli, OptionT}
 import cats.effect._
 import io.igl.jwt._
 import model.person.Person
@@ -20,7 +21,9 @@ object AuthRs {
     if(credentials.username == "test") IO.pure(Some(Person("346456456", "Deon", "Taljaard")))
     else IO.pure(None)
 
-  val authedService: AuthedService[Person, IO] = AuthedService {
+  type OptionTIO[A] = OptionT[IO, A]
+
+  val authedService: Kleisli[OptionTIO, AuthedRequest[IO, Person], Response[IO]] = AuthedService {
     case POST -> Root / "login" as person =>
       Ok(person.asJson, Header("X-Access-Token", buildJwtTokenForPerson(person)))
   }

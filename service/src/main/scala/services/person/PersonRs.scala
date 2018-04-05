@@ -2,7 +2,7 @@ package services
 
 import java.time.Year
 
-import cats.data.{NonEmptyList, Validated}
+import cats.data.{Kleisli, NonEmptyList, OptionT, Validated}
 import cats.effect._
 import core.person.{PersonRegistry, PersonService}
 import io.circe.Json
@@ -60,7 +60,9 @@ class PersonRs(personRegistry: PersonRegistry) {
 
   val personService: PersonService = personRegistry.personService
 
-  val personRsService = HttpService[IO] {
+  type OptionTIO[A] = OptionT[IO, A]
+
+  val personRsService: Kleisli[OptionTIO, Request[IO], Response[IO]] = HttpService[IO] {
     case GET -> Root / PERSONS / personId =>
       personService.findById(personId).flatMap(person => Ok(person.asJson)) //.handleWith(errorHandler)
 

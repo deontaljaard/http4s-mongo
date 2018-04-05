@@ -19,7 +19,7 @@ class HelloRsTest extends Specification
    The 'Hello RESTful Service' should
      return a greeting containing the path param               $returnGreeting"""
 
-  val helloRs: HttpService = HelloRs.service
+  val helloRs: HttpService = HelloRs.helloRsService
 
   def returnGreeting = {
     val name = "deon"

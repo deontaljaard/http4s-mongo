@@ -2,9 +2,10 @@ import sbt._
 
 object Dependencies {
   val catsCoreVersion = "1.1.0"
+  val catsEffectVersion = "0.10"
 //  val fs2CatsVersion = "0.5.0"
   val fs2IOVersion = "0.10.3"
-  val http4sVersion = "0.18.4"
+  val http4sVersion = "0.18.7"
   val circeVersion = "0.9.2"
   val scalaLoggingVersion = "3.8.0"
   val logbackClassicVersion = "1.2.3"
@@ -18,6 +19,7 @@ object Dependencies {
 
   // Compile Dependencies
   val catsCore: ModuleID = "org.typelevel" %% "cats-core" % catsCoreVersion
+  val catsEffect: ModuleID = "org.typelevel" %% "cats-effect" % catsEffectVersion
 //  val fs2Cats: ModuleID = "co.fs2" %% "fs2-cats" % fs2CatsVersion
   val fs2IO: ModuleID = "co.fs2" %% "fs2-io" % fs2IOVersion
 
@@ -54,6 +56,7 @@ object Dependencies {
   // Module dependencies
   lazy val commonDependencies: Seq[ModuleID] = Seq(
     catsCore,
+    catsEffect,
 //    fs2Cats,
     fs2IO,
     scalaLogging,
