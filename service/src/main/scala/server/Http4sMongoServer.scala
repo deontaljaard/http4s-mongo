@@ -8,7 +8,7 @@ import core.person.AsyncPersonRegistry
 import fs2.StreamApp.ExitCode
 import fs2.{Stream, StreamApp}
 import org.http4s.server.blaze.BlazeBuilder
-import services.PersonRs
+import services.person.PersonRs
 import services.auth.AuthRs
 import services.file.FileRs
 import services.hello.HelloRs

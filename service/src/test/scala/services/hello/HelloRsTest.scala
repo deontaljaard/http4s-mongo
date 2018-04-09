@@ -1,12 +1,11 @@
 package services.hello
 
+import cats.effect._
 import org.http4s.Method._
-import org.http4s.{HttpService, Request}
+import org.http4s._
 import org.specs2.Specification
-import org.specs2.matcher.{ThrownExpectations, ThrownMessages}
+import org.specs2.matcher._
 import services.RsTestHelper.buildUrlWithPathParam
-import cats.effect.IO
-import io.circe.generic.auto._
 
 class HelloRsTest extends Specification
   with ThrownExpectations
@@ -19,16 +18,16 @@ class HelloRsTest extends Specification
    The 'Hello RESTful Service' should
      return a greeting containing the path param               $returnGreeting"""
 
-  val helloRs: HttpService = HelloRs.helloRsService
+  val helloRs = HelloRs.helloRsService
 
   def returnGreeting = {
     val name = "deon"
-    val greetingRequest = GET(buildUrlWithPathParam(HelloRs.HELLO, name))//Request[IO](GET, buildUrlWithPathParam(HelloRs.HELLO, name))
-    val response = helloRs(greetingRequest).unsafeRun
+    val greetingRequest = Request[IO](GET, buildUrlWithPathParam(HelloRs.HELLO, name))
+    val response = helloRs(greetingRequest).value.unsafeRunSync
 
-    response.toOption match {
+    response match {
       case Some(resp) =>
-        resp.as[String].unsafeRun.contains(s"Hello, $name") must_== true
+        resp.as[String].unsafeRunSync.contains(s"Hello, $name") must_== true
       case None =>
         fail("In returnGreeting: no response returned...")
     }

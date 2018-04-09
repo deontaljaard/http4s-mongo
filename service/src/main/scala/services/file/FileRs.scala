@@ -9,9 +9,10 @@ import core.file.{FileRegistry, FileService}
 import io.circe.generic.auto._
 import io.circe.parser._
 import model.file.FileMetaData
+import model.person.{Person, PersonNoId}
 import org.http4s.MediaType._
 import org.http4s._
-import org.http4s.circe.jsonEncoderOf
+import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.dsl.io._
 import org.http4s.implicits._
 import org.http4s.headers._
@@ -35,13 +36,18 @@ object FileRs {
     def empty: MultipartResponse = MultipartResponse("", "", successful = false)
   }
 
+  implicit val jsonMetaDataEncoder: EntityEncoder[IO, JsonMetaData] = jsonEncoderOf[IO, JsonMetaData]
+
+  implicit val multipartResponseEncoder: EntityEncoder[IO, MultipartResponse] = jsonEncoderOf[IO, MultipartResponse]
+
+  implicit val jsonMetaDataDecoder: EntityDecoder[IO, JsonMetaData] = jsonOf[IO, JsonMetaData]
+
+  implicit val multipartResponseDecoder: EntityDecoder[IO, MultipartResponse] = jsonOf[IO, MultipartResponse]
+
 }
 
 class FileRs(fileRegistry: FileRegistry) extends LazyLogging {
-
-  implicit def jsonMetaDataEncoder: EntityEncoder[IO, JsonMetaData] = jsonEncoderOf[IO, JsonMetaData]
-
-  implicit def multipartResponseEncoder: EntityEncoder[IO, MultipartResponse] = jsonEncoderOf[IO, MultipartResponse]
+  import FileRs._
 
   private val fileService: FileService = fileRegistry.fileService
 

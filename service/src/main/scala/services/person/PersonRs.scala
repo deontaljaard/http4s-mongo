@@ -1,4 +1,4 @@
-package services
+package services.person
 
 import java.time.Year
 
@@ -7,14 +7,12 @@ import cats.effect._
 import core.person.{PersonRegistry, PersonService}
 import io.circe.Json
 import io.circe.generic.auto._
+import io.circe.syntax._
 import model.person._
 import org.http4s._
 import org.http4s.circe._
 import org.http4s.dsl.io._
 import services.Encoders._
-import org.http4s.circe._
-import io.circe.generic.auto._
-import io.circe.syntax._
 
 import scala.util.Try
 
@@ -45,18 +43,18 @@ object PersonRs {
       Try(Some(CustomUUID(s))).getOrElse(None)
   }
 
+  implicit val personEncoder: EntityEncoder[IO, Person] = jsonEncoderOf[IO, Person]
+
+  implicit val personNoIdEncoder: EntityEncoder[IO, PersonNoId] = jsonEncoderOf[IO, PersonNoId]
+
   implicit val personDecoder: EntityDecoder[IO, Person] = jsonOf[IO, Person]
+
   implicit val personNoIdDecoder: EntityDecoder[IO, PersonNoId] = jsonOf[IO, PersonNoId]
 }
 
 class PersonRs(personRegistry: PersonRegistry) {
 
   import PersonRs._
-
-//
-//  implicit def personEncoder: EntityEncoder[IO, Person] = jsonEncoderOf[IO, Person]
-//
-//  implicit def personNoIdEncoder: EntityEncoder[IO, PersonNoId] = jsonEncoderOf[IO, PersonNoId]
 
   val personService: PersonService = personRegistry.personService
 
