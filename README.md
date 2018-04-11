@@ -38,7 +38,7 @@ time curl http://localhost:8080/api/persons/<person_id>
 
 ### POST to /persons
 ```bash
-time curl -i -H "Content-Type: application/json" -X POST -d '{"firstName":"Frodo", "lastName":"Baggins"}' http://localhost:8080/api/persons
+time curl -i -H "Content-Type: application/json" -X POST -d '{"firstName":"Frodo", "lastName":"Baggins"}' http://localhost:8082/api/persons
 ```
 
 # Invoke auth endpoint

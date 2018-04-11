@@ -31,6 +31,7 @@ trait PersonRepositoryComponent {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   class AsyncMongoPersonRepository extends PersonRepository {
+
     import org.mongodb.scala.model.Filters._
 
     case class AsyncMongoPerson(_id: ObjectId, firstName: String, lastName: String)
@@ -63,9 +64,10 @@ trait PersonRepositoryComponent {
     }
 
     def insertPerson(person: Person): IO[Person] = {
-      val observableInsert: SingleObservable[Completed] = personCollection.insertOne(AsyncMongoPerson(person))
+      val asyncMongoPerson = AsyncMongoPerson(person)
+      val observableInsert: SingleObservable[Completed] = personCollection.insertOne(asyncMongoPerson)
 
-      fromFuture[Person](IO(observableInsert.head().map(_ => person)))
+      fromFuture[Person](IO(observableInsert.head().map(_ => toPerson(asyncMongoPerson))))
     }
 
     def updatePerson(person: Person): IO[Boolean] = {
@@ -100,6 +102,7 @@ trait PersonRepositoryComponent {
     import ReactiveMongoPerson._
 
     implicit def personReader: BSONDocumentReader[ReactiveMongoPerson] = ReactiveMacros.reader[ReactiveMongoPerson]
+
     implicit def personWriter: BSONDocumentWriter[ReactiveMongoPerson] = ReactiveMacros.writer[ReactiveMongoPerson]
 
     //TODO: return optional
@@ -115,7 +118,7 @@ trait PersonRepositoryComponent {
 
       val eventualPerson = personCollection.flatMap(_.insert(reactiveMongoPerson))
         .flatMap { writeResult =>
-          if(writeResult.ok) Future.successful(toPerson(reactiveMongoPerson))
+          if (writeResult.ok) Future.successful(toPerson(reactiveMongoPerson))
           else Future.failed(new Exception(s"Failed to insert. Reason: ${writeResult.writeErrors}"))
         }
 

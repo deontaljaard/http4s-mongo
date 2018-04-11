@@ -9,6 +9,7 @@ import io.circe.Json
 import io.circe.generic.auto._
 import io.circe.syntax._
 import model.person._
+import model.person.validation.PersonValidatorNel
 import org.http4s._
 import org.http4s.circe._
 import org.http4s.dsl.io._
@@ -45,11 +46,11 @@ object PersonRs {
 
   implicit val personEncoder: EntityEncoder[IO, Person] = jsonEncoderOf[IO, Person]
 
-  implicit val personNoIdEncoder: EntityEncoder[IO, PersonNoId] = jsonEncoderOf[IO, PersonNoId]
+  implicit val personNoIdEncoder: EntityEncoder[IO, PersonRegistrationRequest] = jsonEncoderOf[IO, PersonRegistrationRequest]
 
   implicit val personDecoder: EntityDecoder[IO, Person] = jsonOf[IO, Person]
 
-  implicit val personNoIdDecoder: EntityDecoder[IO, PersonNoId] = jsonOf[IO, PersonNoId]
+  implicit val personNoIdDecoder: EntityDecoder[IO, PersonRegistrationRequest] = jsonOf[IO, PersonRegistrationRequest]
 }
 
 class PersonRs(personRegistry: PersonRegistry) {
@@ -72,8 +73,14 @@ class PersonRs(personRegistry: PersonRegistry) {
 
     case req@POST -> Root / PERSONS =>
       for {
-        personNoId <- req.as[PersonNoId]
-        resp <- personService.insertPerson(Person.toPersonWithId(personNoId)).flatMap(person => Ok(person.asJson))
+        personRegistrationRequest <- req.as[PersonRegistrationRequest]
+        validated = PersonValidatorNel.validatePersonRegistrationRequest(personRegistrationRequest).toEither
+        resp <- validated match {
+          case Left(errors) =>
+            BadRequest(errors.toList.mkString("\n"))
+          case Right(person) =>
+            personService.insertPerson(person).flatMap(person => Ok(person.asJson))
+        }
       } yield resp
 
     case req@PUT -> Root / PERSONS =>

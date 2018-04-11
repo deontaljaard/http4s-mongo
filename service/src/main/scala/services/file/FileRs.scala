@@ -9,7 +9,7 @@ import core.file.{FileRegistry, FileService}
 import io.circe.generic.auto._
 import io.circe.parser._
 import model.file.FileMetaData
-import model.person.{Person, PersonNoId}
+import model.person.{Person, PersonRegistrationRequest}
 import org.http4s.MediaType._
 import org.http4s._
 import org.http4s.circe.{jsonEncoderOf, jsonOf}

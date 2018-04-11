@@ -1,4 +1,4 @@
-package model.person
+package model.person.validation
 
 sealed trait PersonErrorModel {
   def errorMessage: String

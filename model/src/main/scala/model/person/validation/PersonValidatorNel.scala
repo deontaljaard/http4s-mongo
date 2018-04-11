@@ -1,7 +1,8 @@
-package model.person
+package model.person.validation
 
 import cats.data.ValidatedNel
 import cats.implicits._
+import model.person._
 
 sealed trait PersonValidatorNel {
 
@@ -13,9 +14,11 @@ sealed trait PersonValidatorNel {
   private def validateLastName(userName: String): ValidationResult[String] =
     if (userName.matches("^[a-zA-Z0-9]+$")) userName.validNel else LastNameHasSpecialCharacters.invalidNel
 
-  def validateForm(firstName: String, lastName: String): ValidationResult[PersonNoId] = {
-    (validateFirstName(firstName),
-      validateLastName(lastName)).mapN(PersonNoId)
+  def validatePersonRegistrationRequest(personRegistrationRequest: PersonRegistrationRequest): ValidationResult[Person] = {
+    (validateFirstName(personRegistrationRequest.firstName),
+      validateLastName(personRegistrationRequest.lastName))
+      .mapN(PersonRegistrationRequest)
+      .map(Person.fromPersonRegistrationRequest)
   }
 }
 
