@@ -14,6 +14,7 @@ import org.http4s._
 import org.http4s.circe._
 import org.http4s.dsl.io._
 import services.Encoders._
+import services.validation.ValidationError
 
 import scala.util.Try
 
@@ -44,11 +45,9 @@ object PersonRs {
       Try(Some(CustomUUID(s))).getOrElse(None)
   }
 
-  implicit val personEncoder: EntityEncoder[IO, Person] = jsonEncoderOf[IO, Person]
-
-  implicit val personNoIdEncoder: EntityEncoder[IO, PersonRegistrationRequest] = jsonEncoderOf[IO, PersonRegistrationRequest]
-
   implicit val personDecoder: EntityDecoder[IO, Person] = jsonOf[IO, Person]
+
+  implicit val validationErrorDecoder: EntityDecoder[IO, ValidationError] = jsonOf[IO, ValidationError]
 
   implicit val personNoIdDecoder: EntityDecoder[IO, PersonRegistrationRequest] = jsonOf[IO, PersonRegistrationRequest]
 }
@@ -77,7 +76,7 @@ class PersonRs(personRegistry: PersonRegistry) {
         validated = PersonValidatorNel.validatePersonRegistrationRequest(personRegistrationRequest).toEither
         resp <- validated match {
           case Left(errors) =>
-            BadRequest(errors.toList.map(_.errorMessage).mkString("\n"))
+            BadRequest(ValidationError(errors.toList.map(_.errorMessage)).asJson)
           case Right(person) =>
             personService.insertPerson(person).flatMap(person => Ok(person.asJson))
         }
