@@ -77,7 +77,7 @@ class PersonRs(personRegistry: PersonRegistry) {
         validated = PersonValidatorNel.validatePersonRegistrationRequest(personRegistrationRequest).toEither
         resp <- validated match {
           case Left(errors) =>
-            BadRequest(errors.toList.mkString("\n"))
+            BadRequest(errors.toList.map(_.errorMessage).mkString("\n"))
           case Right(person) =>
             personService.insertPerson(person).flatMap(person => Ok(person.asJson))
         }

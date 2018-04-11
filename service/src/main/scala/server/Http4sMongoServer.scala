@@ -18,7 +18,7 @@ import scala.util.Properties.envOrNone
 
 object Http4sMongoServer extends StreamApp[IO] {
 
-  val port: Int = envOrNone("HTTP_PORT").map(_.toInt).getOrElse(8082)
+  val port: Int = envOrNone("HTTP_PORT").map(_.toInt).getOrElse(8080)
 
   // The IDE keeps saying it cannot resolve the composition operator, however,
   // the project compiles and runs normally.
