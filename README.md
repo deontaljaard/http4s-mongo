@@ -13,13 +13,29 @@ sbt service/run
 ```
 
 ### Using docker (assuming it's set up on your host)
-In the root of the project, invoke the following commands:
+In the root of the project, invoke the following:
 ```bash
 sbt dockerize
 ```
-followed by
+If you'd like to run a MongoDB instance, run the following:
 ```bash
-docker run -d -p 8080:8080 --name http4s deontaljaard.github.io/service
+docker run --name mongo -p 27017:27017 -d mongo
+```
+This should pull and run the latest mongo image.
+
+Add the required DB and collection.
+
+To start the http4s-mongo service container, run the following:
+```bash
+docker run --name http4s -d -p 8080:8080 --link mongo:mongo deontaljaard.github.io/service
+```
+This will link the mongo container to the http4s container. Note that the connection string changes in this case as a result of the --link flag. The connection string to mongo will change from:
+```scala
+mongodb://[user:pass@]localhost:27017
+```
+to this:
+```scala
+mongodb://[user:pass@]mongo:27017
 ```
 
 # Invoke hello endpoint
@@ -28,7 +44,7 @@ docker run -d -p 8080:8080 --name http4s deontaljaard.github.io/service
 time curl -i http://localhost:8080/api/hello/http4s
 ```
 # Invoke person endpoint
-In order for the /person endpoint to work correctly, you require a MongoDB instance running somewhere. I prefer Docker, so if you want to get it working on your local machine, have a look at the Mongo Docker Repository [here](https://hub.docker.com/_/mongo/) and follow the guide. Just ensure the database and collection you configure aligns with the one's expected by the person repositories in the source.
+In order for the /person endpoint to work correctly, you require a MongoDB instance running somewhere. You can set this up quickly by referring to the above.
 
 ## Example requests to the /person endpoint:
 ### GET to /persons/<person_id>

@@ -2,5 +2,6 @@ package common
 
 object AppConfig {
 
-  val DB_URL = "172.17.0.2"
+  val DB_URL = "localhost"
+  val DB_URL_LOCAL = "mongodb://admin:admin@localhost:27017"
 }
