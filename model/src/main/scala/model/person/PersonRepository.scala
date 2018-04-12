@@ -1,17 +1,20 @@
 package model.person
 
+import java.util.Date
+
 import cats.effect.IO
 import cats.effect.IO._
 import model.mongodb.clients.async.AsyncMongoClientFactory
 import model.mongodb.clients.reactive.ReactiveMongoClientFactory
 import org.bson.codecs.configuration.CodecProvider
 import org.bson.types.ObjectId
+import org.joda.time.DateTime
 import org.mongodb.scala.bson.codecs.{Macros => AsyncMacros}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.result.{DeleteResult, UpdateResult}
 import org.mongodb.scala.{Completed, FindObservable, MongoCollection, SingleObservable}
 import reactivemongo.api.collections.bson.BSONCollection
-import reactivemongo.bson.{BSONDocument, BSONDocumentReader, BSONDocumentWriter, BSONObjectID, document, Macros => ReactiveMacros}
+import reactivemongo.bson.{BSONDocument, BSONDocumentReader, BSONDocumentWriter, BSONObjectID, BSONReader, BSONString, BSONWriter, document, Macros => ReactiveMacros}
 
 import scala.concurrent.Future
 
@@ -71,7 +74,7 @@ trait PersonRepositoryComponent {
     }
 
     def updatePerson(person: Person): IO[Boolean] = {
-      val observableUpdate: SingleObservable[UpdateResult] = personCollection.replaceOne(idEqual(person.id), toAsyncMongoPerson(person))
+      val observableUpdate: SingleObservable[UpdateResult] = personCollection.replaceOne(idEqual(person.id), fromPerson(person))
 
       fromFuture[Boolean](IO(observableUpdate.head().map(_.wasAcknowledged)))
     }
