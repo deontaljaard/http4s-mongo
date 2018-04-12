@@ -2,8 +2,8 @@ package model.person
 
 import java.util.Date
 
-import fs2.Task
-import fs2.Task.fromFuture
+import cats.effect.IO
+import cats.effect.IO._
 import model.mongodb.clients.async.AsyncMongoClientFactory
 import model.mongodb.clients.reactive.ReactiveMongoClientFactory
 import org.bson.codecs.configuration.CodecProvider
@@ -14,24 +14,22 @@ import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.result.{DeleteResult, UpdateResult}
 import org.mongodb.scala.{Completed, FindObservable, MongoCollection, SingleObservable}
 import reactivemongo.api.collections.bson.BSONCollection
-import reactivemongo.bson.{BSONDocument, BSONDocumentReader, BSONDocumentWriter, BSONLong, BSONObjectID, BSONReader, BSONString, BSONWriter, document, Macros => ReactiveMacros}
+import reactivemongo.bson.{BSONDocument, BSONDocumentReader, BSONDocumentWriter, BSONObjectID, BSONReader, BSONString, BSONWriter, document, Macros => ReactiveMacros}
 
 import scala.concurrent.Future
 
 trait PersonRepository {
-  def findById(objectId: String): Task[Person]
+  def findById(objectId: String): IO[Person]
 
-  def insertPerson(person: Person): Task[Person]
+  def insertPerson(person: Person): IO[Person]
 
-  def updatePerson(person: Person): Task[Boolean]
+  def updatePerson(person: Person): IO[Boolean]
 
-  def deletePerson(objectId: String): Task[Boolean]
+  def deletePerson(objectId: String): IO[Boolean]
 }
 
 trait PersonRepositoryComponent {
   val personRepository: PersonRepository
-
-  import common.Implicits.strategy
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -62,29 +60,29 @@ trait PersonRepositoryComponent {
       equal("_id", new ObjectId(objectId))
 
     //TODO: return optional
-    def findById(objectId: String): Task[Person] = {
+    def findById(objectId: String): IO[Person] = {
       val observableFind: FindObservable[AsyncMongoPerson] = personCollection.find(idEqual(objectId))
 
-      fromFuture(observableFind.first().head().map(toPerson))
+      fromFuture[Person](IO(observableFind.first().head().map(toPerson)))
     }
 
-    def insertPerson(person: Person): Task[Person] = {
-      val asyncMongoPerson = fromPerson(person)
+    def insertPerson(person: Person): IO[Person] = {
+      val asyncMongoPerson = AsyncMongoPerson.fromPerson(person)
       val observableInsert: SingleObservable[Completed] = personCollection.insertOne(asyncMongoPerson)
 
-      fromFuture(observableInsert.head().map(_ => toPerson(asyncMongoPerson)))
+      fromFuture[Person](IO(observableInsert.head().map(_ => toPerson(asyncMongoPerson))))
     }
 
-    def updatePerson(person: Person): Task[Boolean] = {
-      val observableUpdate: SingleObservable[UpdateResult] = personCollection.replaceOne(idEqual(person.id), fromPersonWithId(person))
+    def updatePerson(person: Person): IO[Boolean] = {
+      val observableUpdate: SingleObservable[UpdateResult] = personCollection.replaceOne(idEqual(person.id), fromPerson(person))
 
-      fromFuture(observableUpdate.head().map(_.wasAcknowledged))
+      fromFuture[Boolean](IO(observableUpdate.head().map(_.wasAcknowledged)))
     }
 
-    def deletePerson(objectId: String): Task[Boolean] = {
+    def deletePerson(objectId: String): IO[Boolean] = {
       val observableDelete: SingleObservable[DeleteResult] = personCollection.deleteOne(idEqual(objectId))
 
-      fromFuture(observableDelete.head().map(_.wasAcknowledged))
+      fromFuture[Boolean](IO(observableDelete.head().map(_.wasAcknowledged)))
     }
   }
 
@@ -114,11 +112,11 @@ trait PersonRepositoryComponent {
 
     import ReactiveMongoPerson._
 
-    implicit object TestWriter extends BSONWriter[Status, BSONString] {
+    implicit object StatusWriter extends BSONWriter[Status, BSONString] {
       def write(dt: Status): BSONString = BSONString(dt.getClass.getSimpleName.replaceAll("\\$", ""))
     }
 
-    implicit object TestReader extends BSONReader[BSONString, Status] {
+    implicit object StatusReader extends BSONReader[BSONString, Status] {
       def read(bson: BSONString): Status = bson match {
         case BSONString("Active") => Active
         case _ => Inactive
@@ -134,14 +132,14 @@ trait PersonRepositoryComponent {
     implicit def personWriter: BSONDocumentWriter[ReactiveMongoPerson] = ReactiveMacros.writer[ReactiveMongoPerson]
 
     //TODO: return optional
-    override def findById(objectId: String): Task[Person] = {
+    override def findById(objectId: String): IO[Person] = {
       val eventualPerson = personCollection.flatMap(_.find(BSONDocument("_id" -> BSONObjectID.parse(objectId).get))
         .one[ReactiveMongoPerson]).map(maybePerson => toPerson(maybePerson.get))
 
-      fromFuture(eventualPerson)
+      fromFuture[Person](IO(eventualPerson))
     }
 
-    override def insertPerson(person: Person): Task[Person] = {
+    override def insertPerson(person: Person): IO[Person] = {
       val reactiveMongoPerson = ReactiveMongoPerson.fromPerson(person)
 
       val eventualPerson = personCollection.flatMap(_.insert(reactiveMongoPerson))
@@ -150,10 +148,10 @@ trait PersonRepositoryComponent {
           else Future.failed(new Exception(s"Failed to insert. Reason: ${writeResult.writeErrors}"))
         }
 
-      fromFuture(eventualPerson)
+      fromFuture[Person](IO(eventualPerson))
     }
 
-    override def updatePerson(person: Person): Task[Boolean] = {
+    override def updatePerson(person: Person): IO[Boolean] = {
       val reactiveMongoPerson = fromPersonWithId(person)
       val selector = document(
         "_id" -> BSONObjectID.parse(person.id).get,
@@ -165,10 +163,10 @@ trait PersonRepositoryComponent {
           else Future.failed(new Exception(s"Failed to insert. Reason: ${updateResult.writeErrors}"))
         }
 
-      fromFuture(eventualBoolean)
+      fromFuture[Boolean](IO(eventualBoolean))
     }
 
-    override def deletePerson(objectId: String): Task[Boolean] = {
+    override def deletePerson(objectId: String): IO[Boolean] = {
       val selector = document(
         "_id" -> BSONObjectID.parse(objectId).get,
       )
@@ -179,7 +177,7 @@ trait PersonRepositoryComponent {
           else Future.failed(new Exception(s"Failed to insert. Reason: ${writeResult.writeErrors}"))
         }
 
-      fromFuture(eventualBoolean)
+      fromFuture[Boolean](IO(eventualBoolean))
     }
   }
 

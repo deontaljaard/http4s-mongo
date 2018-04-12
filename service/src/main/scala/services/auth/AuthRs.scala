@@ -1,30 +1,31 @@
 package services.auth
 
-import fs2.Task
-import io.circe.generic.auto._
+import cats.data.{Kleisli, OptionT}
+import cats.effect._
 import io.igl.jwt._
 import model.person.Person
 import org.http4s._
-import org.http4s.circe.jsonEncoderOf
-import org.http4s.dsl._
+import org.http4s.circe._
+import io.circe.generic.auto._
+import io.circe.syntax._
+import org.http4s.dsl.io._
 import org.http4s.server.middleware.authentication.BasicAuth
 import org.joda.time.{DateTime, DateTimeZone}
-import JwtHelper._
+import services.auth.JwtHelper._
 
 object AuthRs {
 
-  implicit def personEncoder: EntityEncoder[Person] = jsonEncoderOf[Person]
+//  implicit def personEncoder: EntityEncoder[IO, Person] = jsonEncoderOf[IO, Person]
 
-  private def checkCreds(credentials: BasicCredentials): Task[Option[Person]] =
-    if(credentials.username == "test") Task.now(Some(Person("346456456", "Deon", "Taljaard")))
-    else Task.now(None)
+  private def checkCreds(credentials: BasicCredentials): IO[Option[Person]] =
+    if(credentials.username == "test") IO.pure(Some(Person("346456456", "Deon", "Taljaard")))
+    else IO.pure(None)
 
-  private def authResponse(person: Person): Task[Response] =
-    Ok(person).putHeaders(Header("access_token", buildJwtTokenForPerson(person)))
+  type OptionTIO[A] = OptionT[IO, A]
 
-  val authedService: AuthedService[Person] = AuthedService {
+  val authedService: Kleisli[OptionTIO, AuthedRequest[IO, Person], Response[IO]] = AuthedService {
     case POST -> Root / "login" as person =>
-      authResponse(person)
+      Ok(person.asJson, Header("X-Access-Token", buildJwtTokenForPerson(person)))
   }
 
   val basicAuthMiddleware = BasicAuth("Test Realm", checkCreds)

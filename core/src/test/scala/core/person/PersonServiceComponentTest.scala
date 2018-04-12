@@ -1,7 +1,6 @@
 package core.person
 
-import common.Implicits.strategy
-import fs2.Task
+import cats.effect.IO
 import model.person.Person
 import org.mongodb.scala.bson.ObjectId
 import org.specs2.Specification
@@ -17,7 +16,7 @@ class PersonServiceComponentTest extends Specification
   override val personService = new PersonServiceImpl
 
   val personId = new ObjectId().toString
-  val eventualPerson = Task(Person(personId, "Deon", "Taljaard"))
+  val eventualPerson = IO.pure(Person(personId, "Deon", "Taljaard"))
 
   // mocks
   personRepository.findById(anyString) returns eventualPerson

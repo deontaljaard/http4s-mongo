@@ -1,6 +1,6 @@
 package core.file
 
-import fs2.Task
+import cats.effect.IO
 import model.file.{FileMetaData, FileRepository, FileRepositoryComponent}
 
 trait FileRegistry extends FileServiceComponent with FileRepositoryComponent
@@ -18,7 +18,7 @@ trait FileServiceComponent {
   val fileService: FileService
 
   class FileServiceImpl extends FileService {
-    override def uploadObject(fileMetaData: FileMetaData, fileData: Array[Byte]): Task[Boolean] =
+    override def uploadObject(fileMetaData: FileMetaData, fileData: Array[Byte]): IO[Boolean] =
       fileRepository.uploadObject(fileMetaData, fileData)
   }
 

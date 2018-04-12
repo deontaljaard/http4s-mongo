@@ -1,5 +1,5 @@
+import sbt.Keys._
 import sbt._
-import Keys._
 
 object Commons {
   val appVersion = "1.0"
@@ -9,5 +9,6 @@ object Commons {
     version := appVersion,
     scalaVersion := "2.12.4",
     resolvers := Resolvers.http4sMongoResolvers,
+    scalacOptions += "-Ypartial-unification"
   )
 }

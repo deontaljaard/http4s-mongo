@@ -1,17 +1,20 @@
 package services.person
 
 import java.time.Year
-import java.util.UUID
 
-import cats.data.{NonEmptyList, Validated}
+import cats.data.{Kleisli, NonEmptyList, OptionT, Validated}
+import cats.effect._
 import core.person.{PersonRegistry, PersonService}
-import fs2.Task
 import io.circe.Json
 import io.circe.generic.auto._
+import io.circe.syntax._
 import model.person._
+import model.person.validation.PersonValidatorNel
 import org.http4s._
 import org.http4s.circe._
-import org.http4s.dsl._
+import org.http4s.dsl.io._
+import services.Encoders._
+import services.validation.ValidationError
 
 import scala.util.Try
 
@@ -23,10 +26,10 @@ object PersonRs {
   val PERSONS: String = "persons"
 
   def getValidationErrors(validationResult: Validated[NonEmptyList[String], String]): String =
-    validationResult.fold( { s => s.toList.mkString(", ") }, { _ => "No validation errors" } )
+    validationResult.fold({ s => s.toList.mkString(", ") }, { _ => "No validation errors" })
 
   // One can potentially provide context to the error handler: e.g. from GET -> Root, pass in the userId
-  private val errorHandler: PartialFunction[Throwable, Task[Response]] = {
+  private val errorHandler: PartialFunction[Throwable, IO[Response[IO]]] = {
     case e: MatchError => BadRequest(s"The request was probably not well-formed. Msg = ${e.getMessage}")
   }
 
@@ -41,18 +44,25 @@ object PersonRs {
     def unapply(s: String): Option[CustomUUID] =
       Try(Some(CustomUUID(s))).getOrElse(None)
   }
+
+  implicit val personDecoder: EntityDecoder[IO, Person] = jsonOf[IO, Person]
+
+  implicit val validationErrorDecoder: EntityDecoder[IO, ValidationError] = jsonOf[IO, ValidationError]
+
+  implicit val personNoIdDecoder: EntityDecoder[IO, PersonRegistrationRequest] = jsonOf[IO, PersonRegistrationRequest]
 }
 
 class PersonRs(personRegistry: PersonRegistry) {
+
   import PersonRs._
-  import services.Encoders.booleanEncoder
-  implicit def personEncoder: EntityEncoder[Person] = jsonEncoderOf[Person]
 
   val personService: PersonService = personRegistry.personService
 
-  val personRsService = HttpService {
+  type OptionTIO[A] = OptionT[IO, A]
+
+  val personRsService: Kleisli[OptionTIO, Request[IO], Response[IO]] = HttpService[IO] {
     case GET -> Root / PERSONS / personId =>
-      personService.findById(personId).flatMap(Ok(_))//.handleWith(errorHandler)
+      personService.findById(personId).flatMap(person => Ok(person.asJson)) //.handleWith(errorHandler)
 
     case GET -> Root / PERSONS :? PersonYearQueryParamMatcher(year) =>
       Ok(Json.obj("message" -> Json.fromString(s"Looking for person born in $year")))
@@ -60,22 +70,25 @@ class PersonRs(personRegistry: PersonRegistry) {
     case GET -> Root / PERSONS / "extractor" / CustomUUID(id) =>
       Ok(Json.obj("message" -> Json.fromString(s"Custom UUID extractor $id")))
 
-    case req @ POST -> Root / PERSONS =>
+    case req@POST -> Root / PERSONS =>
       for {
-        personNoId <- req.as(jsonOf[PersonNoId])
-        resp <- personService.insertPerson(Person.toPersonWithId(personNoId)).flatMap(Ok(_))
+        personRegistrationRequest <- req.as[PersonRegistrationRequest]
+        validated = PersonValidatorNel.validatePersonRegistrationRequest(personRegistrationRequest).toEither
+        resp <- validated match {
+          case Left(errors) =>
+            BadRequest(ValidationError(errors.toList.map(_.errorMessage)).asJson)
+          case Right(person) =>
+            personService.insertPerson(person).flatMap(person => Ok(person.asJson))
+        }
       } yield resp
 
-    case req @ PUT -> Root / PERSONS =>
+    case req@PUT -> Root / PERSONS =>
       for {
-        person <- req.as(jsonOf[Person])
-        validateResult = Person.validate(person)
-        resp <-
-        if(validateResult.isValid) personService.updatePerson(person).flatMap(Ok(_))
-        else BadRequest(getValidationErrors(validateResult))
+        person <- req.as[Person]
+        resp <- personService.updatePerson(person).flatMap(person => Ok(person.asJson))
       } yield resp
 
     case DELETE -> Root / PERSONS / personId =>
-      personService.deletePerson(personId).flatMap(Ok(_))//.handleWith(errorHandler)
+      personService.deletePerson(personId).flatMap(Ok(_)) //.handleWith(errorHandler)
   }
 }

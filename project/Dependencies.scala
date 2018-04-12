@@ -1,24 +1,24 @@
 import sbt._
 
 object Dependencies {
-  val catsCoreVersion = "0.9.0"
-  val fs2CatsVersion = "0.3.0"
-  val fs2IOVersion = "0.9.7"
-  val http4sVersion = "0.17.5"
-  val circeVersion = "0.8.0"
-  val scalaLoggingVersion = "3.7.2"
+  val catsCoreVersion = "1.1.0"
+  val catsEffectVersion = "0.10"
+  val fs2IOVersion = "0.10.3"
+  val http4sVersion = "0.18.7"
+  val circeVersion = "0.9.2"
+  val scalaLoggingVersion = "3.8.0"
   val logbackClassicVersion = "1.2.3"
   val mongoScalaVersion = "2.1.0"
-  val reactiveMongoScalaVersion = "0.12.5"
+  val reactiveMongoScalaVersion = "0.13.0"
   val mongoJavaVersion = "3.4.2"
-  val nettyVersion = "4.1.15.Final"
-  val specs2Version = "4.0.0"
+  val nettyVersion = "4.1.22.Final"
+  val specs2Version = "4.0.2"
   val jwtVersion = "1.2.2"
-  val awsS3SdkVersion = "1.11.224"
+  val awsS3SdkVersion = "1.11.301"
 
   // Compile Dependencies
   val catsCore: ModuleID = "org.typelevel" %% "cats-core" % catsCoreVersion
-  val fs2Cats: ModuleID = "co.fs2" %% "fs2-cats" % fs2CatsVersion
+  val catsEffect: ModuleID = "org.typelevel" %% "cats-effect" % catsEffectVersion
   val fs2IO: ModuleID = "co.fs2" %% "fs2-io" % fs2IOVersion
 
   val http4sBlazeServer: ModuleID = "org.http4s" %% "http4s-blaze-server" % http4sVersion
@@ -54,7 +54,7 @@ object Dependencies {
   // Module dependencies
   lazy val commonDependencies: Seq[ModuleID] = Seq(
     catsCore,
-    fs2Cats,
+    catsEffect,
     fs2IO,
     scalaLogging,
     logbackCore,

@@ -39,7 +39,7 @@ lazy val service = (project in file("service"))
   .settings(
     Commons.settings,
     libraryDependencies ++= serviceDependencies,
-    mainClass in assembly := Some("server.Http4sServer"),
+    mainClass in assembly := Some("server.Http4sMongoServer"),
     parallelExecution in Test := false, // https://github.com/mockito/mockito/issues/1067
     dockerSettings
   ).dependsOn(core % "compile->compile;test->test")

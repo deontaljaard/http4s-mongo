@@ -1,14 +1,14 @@
 package model.file
 
-import com.typesafe.scalalogging.{LazyLogging, Logger}
-import fs2.Task
+import cats.effect.IO
+import com.typesafe.scalalogging.LazyLogging
 import model.file.storage.clients.s3.S3ClientFactory
 
 import scala.util.Try
 import scala.util.control.NonFatal
 
 trait FileRepository {
-  def uploadObject(fileMetaData: FileMetaData, fileData: Array[Byte]): Task[Boolean]
+  def uploadObject(fileMetaData: FileMetaData, fileData: Array[Byte]): IO[Boolean]
 }
 
 trait FileRepositoryComponent extends LazyLogging {
@@ -16,12 +16,12 @@ trait FileRepositoryComponent extends LazyLogging {
 
   class AwsS3FileRepository extends FileRepository {
 
-    import com.amazonaws.services.s3.model.ObjectMetadata
-    import com.amazonaws.services.s3.model.PutObjectRequest
     import java.io.ByteArrayInputStream
 
-    override def uploadObject(fileMetaData: FileMetaData, fileData: Array[Byte]): Task[Boolean] = {
-      Task.delay {
+    import com.amazonaws.services.s3.model.{ObjectMetadata, PutObjectRequest}
+
+    override def uploadObject(fileMetaData: FileMetaData, fileData: Array[Byte]): IO[Boolean] = {
+      IO {
         Try {
           val fileContent = new ByteArrayInputStream(fileData)
 
